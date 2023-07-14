@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+      branches: [ 'main' ]
+
+jobs:
+  built:
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:latest
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        path: app
+        submodules: recursive
+    - name: initialize
+      working-directory: app
+      run: |
+        pip3 install -U west
+        west init -l
+        west update
+        west zephyr-export
+        pip3 install -r ../zephyr/scripts/requirements.txt
+    - name: Extract branch name
+      shell: bash
+      run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
+      id: extract_branch
+    - name: build
+      working-directory: app
+      run: |
+        west build . -- -DBUILD_ENV=prod
+    - name: moving artifacts
+      working-directory: app
+      run: |
+        mkdir -p build-out
+        cp build/zephyr/zephyr.bin build-out/tv-bench-ctrl-firm_update_${{ steps.extract_branch.outputs.branch }}.bin
+        cp build/zephyr/zephyr.hex build-out/tv-bench-ctrl-firm_hex_${{ steps.extract_branch.outputs.branch }}.hex
+        cp build/zephyr/zephyr.hex build-out/tv-bench-ctrl-firm_elf_${{ steps.extract_branch.outputs.branch }}.elf
+      if: github.event_name != 'pull_request'
+    - name: upload results
+      uses: actions/upload-artifact@v3
+      if: github.event_name != 'pull_request'
+      with:
+        name: tv-bench-ctrl-frim-builds
+        path: app/build-out/
