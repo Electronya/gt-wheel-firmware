@@ -1,0 +1,23 @@
+# TV Bench Controller Firmware Manifest
+manifest:
+  remotes:
+    - name: electronya
+      url-base: https://github.com/Electronya
+    - name: zephyr
+      url-base: https://github.com/zephyrproject-rtos
+
+  self:
+    path: app
+
+  projects:
+    - name: zephyr
+      remote: zephyr
+      repo-path: zephyr.git
+      path: zephyr
+      revision: zephyr-v3.4.0
+      import: true
+    - name: zephyr-wrapper
+      remote: electronya
+      repo-path: zephyr-wrapper.git
+      path: modules/lib/electronya/zephyr-wrapper
+      revision: adding-led-strip
