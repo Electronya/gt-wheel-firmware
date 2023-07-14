@@ -1,0 +1,15 @@
+identifier: enya_gt_wheel
+name: Electronya GT Wheel
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 80
+flash: 512
+supported:
+  - 6X12 Button Matrix
+  - USB HID to PC
+  - RPM LED Chaser
+  - 2 Thumb encoder with mode selection through their push button.

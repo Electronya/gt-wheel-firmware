@@ -1,0 +1,7 @@
+# Electronya DIY GT Wheel board configuration
+
+# Copyright (c) 2023 Electronya
+
+config BOARD_ENYA_GT_WHEEL
+	bool "Electronya DIY GT Wheel."
+	depends on SOC_STM32F303XE
