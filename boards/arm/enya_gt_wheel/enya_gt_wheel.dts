@@ -7,39 +7,153 @@
 /dts-v1/;
 #include <st/f3/stm32f303Xe.dtsi>
 #include <st/f3/stm32f303r(d-e)tx-pinctrl.dtsi>
-#include "arduino_r3_connector.dtsi"
+#include "ws2812B-bindings"
 
 / {
-	model = "STMicroelectronics STM32F303RE-NUCLEO board";
-	compatible = "st,stm32f303re-nucleo";
+	model = "Electronya DIY GT Wheel";
+	compatible = "en,enya-t-wheel";
 
 	chosen {
-		zephyr,console = &usart2;
-		zephyr,shell-uart = &usart2;
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
-		zephyr,canbus = &can1;
 	};
 
 	leds {
 		compatible = "gpio-leds";
-		green_led_2: led_2 {
-			gpios = <&gpioa 5 GPIO_ACTIVE_HIGH>;
-			label = "User LD2";
+		led_alive: led_alive {
+			gpios = <&gpioc 15 GPIO_ACTIVE_HIGH>;
+			label = "ALIVE LED";
+		};
+
+    /* the following are not LED but merely output GPIOs */
+    btn_col0: btn_col0 {
+			gpios = <&gpiob 0 GPIO_ACTIVE_LOW>;
+			label = "Button Col0";
+		};
+    btn_col1: btn_col1 {
+			gpios = <&gpiob 1 GPIO_ACTIVE_LOW>;
+			label = "Button Col1";
+		};
+    btn_col2: btn_col2 {
+			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+			label = "Button Col2";
+		};
+    btn_col3: btn_col3 {
+			gpios = <&gpiob 10 GPIO_ACTIVE_LOW>;
+			label = "Button Col3";
+		};
+    btn_col4: btn_col4 {
+			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;
+			label = "Button Col4";
+		};
+    btn_col5: btn_col5 {
+			gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
+			label = "Button Col5";
+		};
+    btn_col6: btn_col6 {
+			gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
+			label = "Button Col6";
 		};
 	};
 
 	gpio_keys {
 		compatible = "gpio-keys";
-		user_button: button {
-			label = "User";
-			gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
+    /* following are merely inputs */
+		btn_row0: btn_row0 {
+			gpios = <&gpioa 15 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row0";
+		};
+    btn_row1: btn_row1 {
+			gpios = <&gpioc 10 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row1";
+		};
+    btn_row2: btn_row2 {
+			gpios = <&gpioc 11 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row2";
+		};
+    btn_row3: btn_row3 {
+			gpios = <&gpioc 12 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row3";
+		};
+    btn_row4: btn_row4 {
+			gpios = <&gpiod 2 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row4";
+		};
+    btn_row5: btn_row5 {
+			gpios = <&gpiob 3 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row5";
+		};
+    btn_row6: btn_row6 {
+			gpios = <&gpioa 4 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row6";
+		};
+    btn_row7: btn_row7 {
+			gpios = <&gpioa 5 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row7";
+		};
+    btn_row8: btn_row8 {
+			gpios = <&gpioa 6 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row8";
+		};
+    btn_row9: btn_row9 {
+			gpios = <&gpioa 7 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row9";
+		};
+    btn_row10: btn_row10 {
+			gpios = <&gpioa 8 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row10";
+		};
+    btn_row11: btn_row11 {
+			gpios = <&gpioa 9 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row11";
+		};
+    shifter_down: shifter_down {
+			gpios = <&gpioa 2 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row11";
+		};
+    shifter_up: shifter_up {
+			gpios = <&gpioa 3 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+      label = "Button Row11";
 		};
 	};
 
 	aliases {
-		led0 = &green_led_2;
-		sw0 = &user_button;
+    /* led alive */
+		alive = &led_alive;
+		/* button columns */
+    col0 = &btn_col0;
+    col1 = &btn_col1;
+    col2 = &btn_col2;
+    col3 = &btn_col3;
+    col4 = &btn_col4;
+    col5 = &btn_col5;
+    col6 = &btn_col6;
+    /* button rows */
+    row0 = &btn_row0;
+    row1 = &btn_row1;
+    row2 = &btn_row2;
+    row3 = &btn_row3;
+    row4 = &btn_row4;
+    row5 = &btn_row5;
+    row6 = &btn_row6;
+    row7 = &btn_row7;
+    row8 = &btn_row8;
+    row9 = &btn_row9;
+    row10 = &btn_row10;
+    row11 = &btn_row11;
+    /* shifter */
+    shifterdown = &shifter_down;
+    shifterup = &shifter_up;
+    /* led strip */
+    ledstrip = &led_strip;
+    /* adc */
+    adc = &adc1;
+    /* usb */
+    usb = &usb;
+    /* watchdog */
+    iwdg = &iwdg;
 	};
 };
 
@@ -68,42 +182,45 @@
 	apb2-prescaler = <1>;
 };
 
-&usart2 {
-	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
-	pinctrl-names = "default";
-	current-speed = <115200>;
-	status = "okay";
-};
-
 &usart1 {
-	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+	pinctrl-0 = <&usart1_tx_pc5 &usart1_rx_pc4>;
 	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
-};
-
-&rtc {
-	clocks = <&rcc STM32_CLOCK_BUS_APB1 0x10000000>,
-		 <&rcc STM32_SRC_LSI RTC_SEL(2)>;
-	status = "okay";
-};
-
-&can1 {
-	pinctrl-0 = <&can_rx_pb8 &can_tx_pb9>;
-	pinctrl-names = "default";
-	bus-speed = <125000>;
-	status = "okay";
-};
-
-&i2c1 {
-	pinctrl-0 = <&i2c1_scl_pb6 &i2c1_sda_pb9>;
-	status = "okay";
-	pinctrl-names = "default";
-	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &spi1 {
 	pinctrl-0 = <&spi1_mosi_pa7 &spi1_miso_pa6 &spi1_sck_pa5>;
 	pinctrl-names = "default";
 	status = "okay";
+  led_strip: ws2812@0 {
+		compatible = "worldsemi,ws2812-spi";
+		/* SPI */
+		reg = <0>; /* ignored, but necessary for SPI bindings */
+		spi-max-frequency = <SPI_FREQ>;
+		/* WS2812 */
+		chain-length = <14>; /* arbitrary; change at will */
+		color-mapping = <LED_COLOR_ID_GREEN
+				             LED_COLOR_ID_RED
+				             LED_COLOR_ID_BLUE>;
+		spi-one-frame = <ONE_FRAME>;
+		spi-zero-frame = <ZERO_FRAME>;
+	};
+};
+
+&adc1 {
+  status = "okay";
+  clutch-left-channel = <0>;
+  clutch-right-channel = <1>;
+};
+
+&usb {
+  status = "okay";
+  pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
+	pinctrl-names = "default";
+}
+
+&iwdg {
+  // TODO: enable at the end of dev.
+	// status = "okay";
 };
