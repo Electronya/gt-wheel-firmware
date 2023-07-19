@@ -1,0 +1,8 @@
+tests:
+  gt_wheel.ledCtrl:
+    platform_allow: qemu_cortex_m0
+    tags: ledCtrl
+    extra_args: TEST_SUITE=ledCtrl
+    extra_configs:
+      - CONFIG_ZTEST=y
+      - CONFIG_ZTEST_NEW_API=y

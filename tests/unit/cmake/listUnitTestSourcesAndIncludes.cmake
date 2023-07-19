@@ -9,9 +9,9 @@ macro(getFileListForSuite sourceList includeList)
   set(mockInc "")
   set(modInc "")
   # List files and dirs for the test suite
-  if(TEST_SUITE STREQUAL "TBD")
-    # listSources(${CMAKE_CURRENT_SOURCE_DIR}/ledCtrl testSrc)
-    # listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/ledCtrl testInc)
+  if(TEST_SUITE STREQUAL "ledCtrl")
+    listSources(${CMAKE_CURRENT_SOURCE_DIR}/ledCtrl testSrc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/ledCtrl testInc)
     # listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
   endif()
 

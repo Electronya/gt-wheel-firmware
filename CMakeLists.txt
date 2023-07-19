@@ -16,6 +16,12 @@ else()
   message(FATAL_ERROR "Unsupported build environment!!!")
 endif()
 
+# Load the application config for development
+if((BUILD_ENV STREQUAL "dev") OR (BUILD_ENV STREQUAL "qemu"))
+  set(CONF_FILE "prj_dev.conf")
+endif()
+
+
 # Set Zephyr environment
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(app)
