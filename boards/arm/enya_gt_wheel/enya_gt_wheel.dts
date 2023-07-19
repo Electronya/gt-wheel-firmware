@@ -7,7 +7,9 @@
 /dts-v1/;
 #include <st/f3/stm32f303Xe.dtsi>
 #include <st/f3/stm32f303r(d-e)tx-pinctrl.dtsi>
-#include "ws2812B-bindings"
+#include <zephyr/dt-bindings/led/led.h>
+
+#include "./ws2812B-bindings.h"
 
 / {
 	model = "Electronya DIY GT Wheel";
@@ -62,59 +64,59 @@
 		compatible = "gpio-keys";
     /* following are merely inputs */
 		btn_row0: btn_row0 {
-			gpios = <&gpioa 15 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row0";
 		};
     btn_row1: btn_row1 {
-			gpios = <&gpioc 10 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioc 10 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row1";
 		};
     btn_row2: btn_row2 {
-			gpios = <&gpioc 11 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioc 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row2";
 		};
     btn_row3: btn_row3 {
-			gpios = <&gpioc 12 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioc 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row3";
 		};
     btn_row4: btn_row4 {
-			gpios = <&gpiod 2 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpiod 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row4";
 		};
     btn_row5: btn_row5 {
-			gpios = <&gpiob 3 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpiob 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row5";
 		};
     btn_row6: btn_row6 {
-			gpios = <&gpioa 4 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row6";
 		};
     btn_row7: btn_row7 {
-			gpios = <&gpioa 5 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row7";
 		};
     btn_row8: btn_row8 {
-			gpios = <&gpioa 6 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row8";
 		};
     btn_row9: btn_row9 {
-			gpios = <&gpioa 7 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row9";
 		};
     btn_row10: btn_row10 {
-			gpios = <&gpioa 8 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row10";
 		};
     btn_row11: btn_row11 {
-			gpios = <&gpioa 9 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row11";
 		};
     shifter_down: shifter_down {
-			gpios = <&gpioa 2 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row11";
 		};
     shifter_up: shifter_up {
-			gpios = <&gpioa 3 GPIO_ACTIVE_LOW | GPIO_PULL_UP>;
+			gpios = <&gpioa 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row11";
 		};
 	};
@@ -183,7 +185,7 @@
 };
 
 &usart1 {
-	pinctrl-0 = <&usart1_tx_pc5 &usart1_rx_pc4>;
+	pinctrl-0 = <&usart1_tx_pc4 &usart1_rx_pc5>;
 	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
@@ -199,10 +201,10 @@
 		reg = <0>; /* ignored, but necessary for SPI bindings */
 		spi-max-frequency = <SPI_FREQ>;
 		/* WS2812 */
-		chain-length = <14>; /* arbitrary; change at will */
+		chain-length = <14>;
 		color-mapping = <LED_COLOR_ID_GREEN
-				             LED_COLOR_ID_RED
-				             LED_COLOR_ID_BLUE>;
+                     LED_COLOR_ID_RED
+                     LED_COLOR_ID_BLUE>;
 		spi-one-frame = <ONE_FRAME>;
 		spi-zero-frame = <ZERO_FRAME>;
 	};
@@ -210,17 +212,17 @@
 
 &adc1 {
   status = "okay";
-  clutch-left-channel = <0>;
-  clutch-right-channel = <1>;
+  pinctrl-names = "default";
+  pinctrl-0 = <&adc1_in1_pa0 &adc1_in2_pa1>;
 };
 
 &usb {
   status = "okay";
   pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
 	pinctrl-names = "default";
-}
+};
 
 &iwdg {
   // TODO: enable at the end of dev.
-	// status = "okay";
+	status = "disabled";
 };

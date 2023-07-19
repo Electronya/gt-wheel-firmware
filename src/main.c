@@ -11,7 +11,6 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/sys/printk.h>
 
 #define MAIN_MODULE_NAME main_module
 
@@ -20,8 +19,7 @@ LOG_MODULE_REGISTER(MAIN_MODULE_NAME);
 
 void main(void)
 {
-  int rc = 0;
-  LedCtrlBaseColor color = LED_CTRL_RED;
+  // int rc = 0;
 
   LOG_INF("booting gt wheel");
 }
