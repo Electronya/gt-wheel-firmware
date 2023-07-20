@@ -12,7 +12,7 @@ macro(getFileListForSuite sourceList includeList)
   if(TEST_SUITE STREQUAL "ledCtrl")
     listSources(${CMAKE_CURRENT_SOURCE_DIR}/ledCtrl testSrc)
     listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/ledCtrl testInc)
-    # listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
   endif()
 
   # message("testSrc: ${testSrc}")
