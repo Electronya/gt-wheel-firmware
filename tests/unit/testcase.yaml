@@ -6,3 +6,8 @@ tests:
     extra_configs:
       - CONFIG_ZTEST=y
       - CONFIG_ZTEST_NEW_API=y
+      - CONFIG_SPI=y
+      - CONFIG_SPI_STM32_DMA=y
+      - CONFIG_LED_STRIP=y
+      - CONFIG_ENYA_ZEPHYR_WRAPPER=y
+      - CONFIG_ENYA_LED_STRIP=y
