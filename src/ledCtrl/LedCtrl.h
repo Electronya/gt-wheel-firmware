@@ -33,9 +33,24 @@ int ledCtrlInit(void);
 uint32_t ledCtrlGetRpmChaserPxlCnt(void);
 
 /**
- * @brief   Set the right encoder mode led to default mode (blue).
+ * @brief   Set the right encoder pixel to default mode (blue).
  */
-void ledCtrlSetRightEncoderDefaultMode(void);
+void ledCtrlSetRightEncPixelDefaultMode(void);
+
+/**
+ * @brief   Set the right encoder pixel to secondary mode (red).
+*/
+void ledCtrlSetRightEncPixelSecondaryMode(void);
+
+/**
+ * @brief   Set the left encoder pixel to default mode (blue).
+ */
+void ledCtrlSetLeftEncPixelDefaultMode(void);
+
+/**
+ * @brief   Set the left encoder pixel to secondary mode (red).
+*/
+void ledCtrlSetLeftEncPixelSecondaryMode(void);
 
 /**
  * @brief   Set the pixel colors of the RMP chaser.

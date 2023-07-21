@@ -139,10 +139,10 @@ ZTEST(ledCtrl_suite, test_ledCtrlGetPixelCount)
 }
 
 /**
- * @test  ledCtrlSetRightEncoderDefaultMode must set the right encoder
+ * @test  ledCtrlSetRightEncPixelDefaultMode must set the right encoder
  *        pixel to the default mode color (blue).
 */
-ZTEST_F(ledCtrl_suite, test_ledCtrlSetRightEncoderDefaultMode_SetPixelColor)
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetRightEncPixelDefaultMode_SetPixelColor)
 {
   ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
 
@@ -155,16 +155,106 @@ ZTEST_F(ledCtrl_suite, test_ledCtrlSetRightEncoderDefaultMode_SetPixelColor)
   ledStrip.pixelCount = LED_CTRL_PIXEL_CNT;
   ledStrip.rgbPixels = fixture->newPixels;
 
-  ledCtrlSetRightEncoderDefaultMode();
+  ledCtrlSetRightEncPixelDefaultMode();
 
   for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
   {
     zassert_equal(expectedPixels[i].b, ledStrip.rgbPixels[i].b,
-      "ledCtrlSetRightEncoderDefaultMode failed to update the pixel data.");
+      "ledCtrlSetRightEncPixelDefaultMode failed to update the pixel data.");
     zassert_equal(expectedPixels[i].g, ledStrip.rgbPixels[i].g,
-      "ledCtrlSetRightEncoderDefaultMode failed to update the pixel data.");
+      "ledCtrlSetRightEncPixelDefaultMode failed to update the pixel data.");
     zassert_equal(expectedPixels[i].r, ledStrip.rgbPixels[i].r,
-      "ledCtrlSetRightEncoderDefaultMode failed to update the pixel data.");
+      "ledCtrlSetRightEncPixelDefaultMode failed to update the pixel data.");
+  }
+}
+
+/**
+ * @test  ledCtrlSetRightEncPixelSecondaryMode must set the right encoder
+ *        pixel to the secondary mode color (red).
+*/
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetRightEncPixelSecondaryMode_SetPixelColor)
+{
+  ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
+
+  bytecpy(expectedPixels, fixture->newPixels,
+    sizeof(ZephyrRgbLed) * LED_CTRL_PIXEL_CNT);
+  expectedPixels[0].b = 0x00;
+  expectedPixels[0].g = 0x00;
+  expectedPixels[0].r = 0x0f;
+
+  ledStrip.pixelCount = LED_CTRL_PIXEL_CNT;
+  ledStrip.rgbPixels = fixture->newPixels;
+
+  ledCtrlSetRightEncPixelSecondaryMode();
+
+  for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
+  {
+    zassert_equal(expectedPixels[i].b, ledStrip.rgbPixels[i].b,
+      "ledCtrlSetRightEncPixelSecondaryMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].g, ledStrip.rgbPixels[i].g,
+      "ledCtrlSetRightEncPixelSecondaryMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].r, ledStrip.rgbPixels[i].r,
+      "ledCtrlSetRightEncPixelSecondaryMode failed to update the pixel data.");
+  }
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelDefaultMode must set the left encoder
+ *        pixel to the default mode color (blue).
+*/
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetLeftEncPixelDefaultMode_SetPixelColor)
+{
+  ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
+
+  bytecpy(expectedPixels, fixture->newPixels,
+    sizeof(ZephyrRgbLed) * LED_CTRL_PIXEL_CNT);
+  expectedPixels[1].b = 0x0f;
+  expectedPixels[1].g = 0x00;
+  expectedPixels[1].r = 0x00;
+
+  ledStrip.pixelCount = LED_CTRL_PIXEL_CNT;
+  ledStrip.rgbPixels = fixture->newPixels;
+
+  ledCtrlSetLeftEncPixelDefaultMode();
+
+  for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
+  {
+    zassert_equal(expectedPixels[i].b, ledStrip.rgbPixels[i].b,
+      "ledCtrlSetLeftEncPixelDefaultMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].g, ledStrip.rgbPixels[i].g,
+      "ledCtrlSetLeftEncPixelDefaultMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].r, ledStrip.rgbPixels[i].r,
+      "ledCtrlSetLeftEncPixelDefaultMode failed to update the pixel data.");
+  }
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelSecondaryMode must set the left encoder
+ *        pixel to the secondary mode color (red).
+*/
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetLeftEncPixelSecondaryMode_SetPixelColor)
+{
+  ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
+
+  bytecpy(expectedPixels, fixture->newPixels,
+    sizeof(ZephyrRgbLed) * LED_CTRL_PIXEL_CNT);
+  expectedPixels[1].b = 0x00;
+  expectedPixels[1].g = 0x00;
+  expectedPixels[1].r = 0x0f;
+
+  ledStrip.pixelCount = LED_CTRL_PIXEL_CNT;
+  ledStrip.rgbPixels = fixture->newPixels;
+
+  ledCtrlSetLeftEncPixelSecondaryMode();
+
+  for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
+  {
+    zassert_equal(expectedPixels[i].b, ledStrip.rgbPixels[i].b,
+      "ledCtrlSetLeftEncPixelSecondaryMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].g, ledStrip.rgbPixels[i].g,
+      "ledCtrlSetLeftEncPixelSecondaryMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].r, ledStrip.rgbPixels[i].r,
+      "ledCtrlSetLeftEncPixelSecondaryMode failed to update the pixel data.");
   }
 }
 

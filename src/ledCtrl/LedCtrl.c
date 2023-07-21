@@ -31,7 +31,7 @@
 /**
  * @brief The left encoder pixel index.
 */
-#define LEF_ENCODER_PIXEL_IDX         1
+#define LEFT_ENCODER_PIXEL_IDX        1
 
 /**
  * @brief The RPM chaser pixel offset.
@@ -81,11 +81,32 @@ uint32_t ledCtrlGetRpmChaserPxlCnt(void)
   return ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET;
 }
 
-void ledCtrlSetRightEncoderDefaultMode(void)
+void ledCtrlSetRightEncPixelDefaultMode(void)
 {
   ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].b = encDefColor.b;
   ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].g = encDefColor.g;
   ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].r = encDefColor.r;
+}
+
+void ledCtrlSetRightEncPixelSecondaryMode(void)
+{
+  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].b = encSecColor.b;
+  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].g = encSecColor.g;
+  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].r = encSecColor.r;
+}
+
+void ledCtrlSetLeftEncPixelDefaultMode(void)
+{
+  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].b = encDefColor.b;
+  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].g = encDefColor.g;
+  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].r = encDefColor.r;
+}
+
+void ledCtrlSetLeftEncPixelSecondaryMode(void)
+{
+  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].b = encSecColor.b;
+  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].g = encSecColor.g;
+  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].r = encSecColor.r;
 }
 
 int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
