@@ -85,7 +85,7 @@ ZTEST(ledCtrl_suite, test_ledCtrlInit_Success)
 
 #define LED_CTRL_PIXEL_CNT_TEST_CNT     3
 /**
- * @test  ledCtrlGetPixelCount must return the number of pixel in the
+ * @test  ledCtrlGetRpmChaserPxlCnt must return the number of pixel in the
  *        LED strip.
 */
 ZTEST(ledCtrl_suite, test_ledCtrlGetPixelCount)
@@ -94,40 +94,41 @@ ZTEST(ledCtrl_suite, test_ledCtrlGetPixelCount)
 
   for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT_TEST_CNT; ++i)
   {
-    ledStrip.pixelCount = expectedPixelCnt[i];
-    zassert_equal(expectedPixelCnt[i], ledCtrlGetPixelCount(),
-      "ledCtrlGetPixelCount failed to return the pixel count.");
+    ledStrip.pixelCount = expectedPixelCnt[i] + 2;
+    zassert_equal(expectedPixelCnt[i], ledCtrlGetRpmChaserPxlCnt(),
+      "ledCtrlGetRpmChaserPxlCnt failed to return the pixel count.");
   }
 }
 
 #define LED_CTRL_PIXEL_CNT            5
 #define LED_CTRL_SET_PIXEL_TEST_CNT   2
 /**
- * @test  ledCtrlSetPixels must return the error code if the new pixel
- *        string is not the same length of the LED strip.
+ * @test  ledCtrlSetRpmChaserPixels must return the error code if the new pixel
+ *        string is not the same length of the RPM chaser.
 */
 ZTEST(ledCtrl_suite, test_ledCtrlSetPixels_Fail)
 {
   ZephyrRgbLed pixels[LED_CTRL_PIXEL_CNT];
-  uint32_t pixelCnt[LED_CTRL_SET_PIXEL_TEST_CNT] = { LED_CTRL_PIXEL_CNT - 1,
-                                                     LED_CTRL_PIXEL_CNT + 1};
+  uint32_t pixelCnt[LED_CTRL_SET_PIXEL_TEST_CNT] = { LED_CTRL_PIXEL_CNT - 3,
+                                                     LED_CTRL_PIXEL_CNT - 1};
 
   for(uint8_t i = 0; i < LED_CTRL_SET_PIXEL_TEST_CNT; ++i)
   {
     ledStrip.pixelCount = pixelCnt[i];
-    zassert_equal(-EDOM, ledCtrlSetPixels(pixels, LED_CTRL_PIXEL_CNT),
-      "ledCtrlSetPixels failed to return the error code.");
+    zassert_equal(-EDOM, ledCtrlSetRpmChaserPixels(pixels, LED_CTRL_PIXEL_CNT),
+      "ledCtrlSetRpmChaserPixels failed to return the error code.");
   }
 }
 
 /**
- * @test  ledCtrlSetPixels must update the led strip pixel data and
+ * @test  ledCtrlSetRpmChaserPixels must update the RPM chaser pixel data and
  *        return the success code.
 */
 ZTEST(ledCtrl_suite, test_ledCtrlSetPixels_UpdateSuccess)
 {
   int successRet = 0;
   ZephyrRgbLed pixels[LED_CTRL_PIXEL_CNT];
+  ZephyrRgbLed newPixels[LED_CTRL_PIXEL_CNT];
   ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
 
   ledStrip.rgbPixels = pixels;
@@ -137,23 +138,35 @@ ZTEST(ledCtrl_suite, test_ledCtrlSetPixels_UpdateSuccess)
     pixels[i].b = 0;
     pixels[i].g = 0;
     pixels[i].r = 0;
-    expectedPixels[i].b = i - 1;
-    expectedPixels[i].g = i;
-    expectedPixels[i].r = i + 1;
+    newPixels[i].b = i - 1;
+    newPixels[i].g = i;
+    newPixels[i].r = i + 1;
+    if(i < 2)
+    {
+      expectedPixels[i].b = pixels[i].b;
+      expectedPixels[i].g = pixels[i].g;
+      expectedPixels[i].r = pixels[i].r;
+    }
+    else
+    {
+      expectedPixels[i].b = newPixels[i].b;
+      expectedPixels[i].g = newPixels[i].g;
+      expectedPixels[i].r = newPixels[i].r;
+    }
   }
 
   zassert_equal(successRet,
-    ledCtrlSetPixels(expectedPixels, LED_CTRL_PIXEL_CNT),
-    "ledCtrlSetPixels failed to return the success code.");
+    ledCtrlSetRpmChaserPixels(newPixels + 2, LED_CTRL_PIXEL_CNT - 2),
+    "ledCtrlSetRpmChaserPixels failed to return the success code.");
 
   for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
   {
     zassert_equal(expectedPixels[i].b, ledStrip.rgbPixels[i].b,
-      "ledCtrlSetPixels failed to update the pixel data.");
+      "ledCtrlSetRpmChaserPixels failed to update the pixel data.");
     zassert_equal(expectedPixels[i].g, ledStrip.rgbPixels[i].g,
-      "ledCtrlSetPixels failed to update the pixel data.");
+      "ledCtrlSetRpmChaserPixels failed to update the pixel data.");
     zassert_equal(expectedPixels[i].r, ledStrip.rgbPixels[i].r,
-      "ledCtrlSetPixels failed to update the pixel data.");
+      "ledCtrlSetRpmChaserPixels failed to update the pixel data.");
   }
 }
 

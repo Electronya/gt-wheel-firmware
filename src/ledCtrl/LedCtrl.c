@@ -22,6 +22,11 @@
 
 #define LED_CTRL_MODULE_NAME led_ctrl_module
 
+/**
+ * @brief The RPM chaser pixel offset.
+*/
+#define RPM_CHASER_PIXEL_OFFSET       2
+
 /* Setting module logging */
 LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
 
@@ -42,17 +47,17 @@ int ledCtrlInit(void)
   return rc;
 }
 
-uint32_t ledCtrlGetPixelCount(void)
+uint32_t ledCtrlGetRpmChaserPxlCnt(void)
 {
-  return ledStrip.pixelCount;
+  return ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET;
 }
 
-int ledCtrlSetPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
+int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
 {
-  if(pixelCnt != ledStrip.pixelCount)
+  if(pixelCnt != ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET)
     return -EDOM;
 
-  bytecpy(ledStrip.rgbPixels, pixels, 3 * ledStrip.pixelCount);
+  bytecpy(ledStrip.rgbPixels + RPM_CHASER_PIXEL_OFFSET, pixels, 3 * pixelCnt);
   return 0;
 }
 
