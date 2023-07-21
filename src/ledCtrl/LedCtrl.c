@@ -15,10 +15,10 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/util.h>
 
 #include "LedCtrl.h"
 #include "zephyrCommon.h"
-#include "zephyrLedStrip.h"
 
 #define LED_CTRL_MODULE_NAME led_ctrl_module
 
@@ -45,6 +45,15 @@ int ledCtrlInit(void)
 uint32_t ledCtrlGetPixelCount(void)
 {
   return ledStrip.pixelCount;
+}
+
+int ledCtrlSetPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
+{
+  if(pixelCnt != ledStrip.pixelCount)
+    return -EDOM;
+
+  bytecpy(ledStrip.rgbPixels, pixels, 3 * ledStrip.pixelCount);
+  return 0;
 }
 
 /** @} */
