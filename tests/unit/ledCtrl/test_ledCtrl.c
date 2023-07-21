@@ -22,7 +22,44 @@
 #include "zephyrLedStrip.h"
 
 DEFINE_FFF_GLOBALS;
-ZTEST_SUITE(ledCtrl_suite, NULL, NULL, NULL, NULL, NULL);
+
+#define LED_CTRL_PIXEL_CNT            5
+
+struct ledCtrl_suite_fixture
+{
+  ZephyrRgbLed pixels[LED_CTRL_PIXEL_CNT];
+  ZephyrRgbLed newPixels[LED_CTRL_PIXEL_CNT];
+  ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
+};
+
+static void *ledCtrlSuiteSetup(void)
+{
+  struct ledFixture *fixture = k_malloc(sizeof(struct ledCtrl_suite_fixture));
+  return fixture;
+}
+
+static void ledCtrlSuiteTeardown(void *f)
+{
+  k_free(f);
+}
+
+static void ledCtrlCaseSetup(void *f)
+{
+  struct ledCtrl_suite_fixture *fixture = (struct ledCtrl_suite_fixture *)f;
+
+  for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
+  {
+    fixture->pixels[i].b = 0;
+    fixture->pixels[i].g = 0;
+    fixture->pixels[i].r = 0;
+    fixture->newPixels[i].b = i - 1;
+    fixture->newPixels[i].g = i;
+    fixture->newPixels[i].r = i + 1;
+  }
+}
+
+ZTEST_SUITE(ledCtrl_suite, NULL, ledCtrlSuiteSetup, ledCtrlCaseSetup,
+  NULL, ledCtrlSuiteTeardown);
 
 #define LED_CTRL_IS_DEV_READY_TEST_CNT  3
 FAKE_VALUE_FUNC(int, zephyrLedStripInit, ZephyrLedStrip*, ZephyrLedStripClrFmt,
@@ -100,22 +137,30 @@ ZTEST(ledCtrl_suite, test_ledCtrlGetPixelCount)
   }
 }
 
-#define LED_CTRL_PIXEL_CNT            5
+/**
+ * @test  ledCtrlSetRightEncoderDefaultMode must set the right encoder
+ *        pixel to the default mode color (blue).
+*/
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetRightEncoderDefaultMode_SetPixelColor)
+{
+
+}
+
 #define LED_CTRL_SET_PIXEL_TEST_CNT   2
 /**
  * @test  ledCtrlSetRpmChaserPixels must return the error code if the new pixel
  *        string is not the same length of the RPM chaser.
 */
-ZTEST(ledCtrl_suite, test_ledCtrlSetPixels_Fail)
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetPixels_Fail)
 {
-  ZephyrRgbLed pixels[LED_CTRL_PIXEL_CNT];
   uint32_t pixelCnt[LED_CTRL_SET_PIXEL_TEST_CNT] = { LED_CTRL_PIXEL_CNT - 3,
                                                      LED_CTRL_PIXEL_CNT - 1};
 
   for(uint8_t i = 0; i < LED_CTRL_SET_PIXEL_TEST_CNT; ++i)
   {
     ledStrip.pixelCount = pixelCnt[i];
-    zassert_equal(-EDOM, ledCtrlSetRpmChaserPixels(pixels, LED_CTRL_PIXEL_CNT),
+    zassert_equal(-EDOM,
+      ledCtrlSetRpmChaserPixels(fixture->newPixels, LED_CTRL_PIXEL_CNT),
       "ledCtrlSetRpmChaserPixels failed to return the error code.");
   }
 }
@@ -124,39 +169,31 @@ ZTEST(ledCtrl_suite, test_ledCtrlSetPixels_Fail)
  * @test  ledCtrlSetRpmChaserPixels must update the RPM chaser pixel data and
  *        return the success code.
 */
-ZTEST(ledCtrl_suite, test_ledCtrlSetPixels_UpdateSuccess)
+ZTEST_F(ledCtrl_suite, test_ledCtrlSetPixels_UpdateSuccess)
 {
   int successRet = 0;
-  ZephyrRgbLed pixels[LED_CTRL_PIXEL_CNT];
-  ZephyrRgbLed newPixels[LED_CTRL_PIXEL_CNT];
   ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
 
-  ledStrip.rgbPixels = pixels;
+  ledStrip.rgbPixels = fixture->pixels;
   ledStrip.pixelCount = LED_CTRL_PIXEL_CNT;
   for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
   {
-    pixels[i].b = 0;
-    pixels[i].g = 0;
-    pixels[i].r = 0;
-    newPixels[i].b = i - 1;
-    newPixels[i].g = i;
-    newPixels[i].r = i + 1;
     if(i < 2)
     {
-      expectedPixels[i].b = pixels[i].b;
-      expectedPixels[i].g = pixels[i].g;
-      expectedPixels[i].r = pixels[i].r;
+      expectedPixels[i].b = fixture->pixels[i].b;
+      expectedPixels[i].g = fixture->pixels[i].g;
+      expectedPixels[i].r = fixture->pixels[i].r;
     }
     else
     {
-      expectedPixels[i].b = newPixels[i].b;
-      expectedPixels[i].g = newPixels[i].g;
-      expectedPixels[i].r = newPixels[i].r;
+      expectedPixels[i].b = fixture->newPixels[i].b;
+      expectedPixels[i].g = fixture->newPixels[i].g;
+      expectedPixels[i].r = fixture->newPixels[i].r;
     }
   }
 
   zassert_equal(successRet,
-    ledCtrlSetRpmChaserPixels(newPixels + 2, LED_CTRL_PIXEL_CNT - 2),
+    ledCtrlSetRpmChaserPixels(fixture->newPixels + 2, LED_CTRL_PIXEL_CNT - 2),
     "ledCtrlSetRpmChaserPixels failed to return the success code.");
 
   for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)

@@ -1,7 +1,8 @@
-# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2023 by Electronya
 
 CONFIG_SOC_SERIES_STM32F3X=y
 CONFIG_SOC_STM32F303XE=y
+CONFIG_HEAP_MEM_POOL_SIZE=256
 
 CONFIG_SERIAL=y
 

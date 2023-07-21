@@ -22,6 +22,17 @@
 
 #define LED_CTRL_MODULE_NAME led_ctrl_module
 
+
+/**
+ * @brief The right encoder pixel index.
+*/
+#define RIGHT_ENCODER_PIXEL_IDX       0
+
+/**
+ * @brief The left encoder pixel index.
+*/
+#define LEF_ENCODER_PIXEL_IDX         1
+
 /**
  * @brief The RPM chaser pixel offset.
 */
@@ -39,6 +50,24 @@ static ZephyrLedStrip ledStrip = {
 static ZephyrLedStrip ledStrip;
 #endif
 
+/**
+ * @brief Encoder pixel default color.
+*/
+ZephyrRgbLed encDefColor = {
+  .b = 0x0f,
+  .g = 0x00,
+  .r = 0x00,
+};
+
+/**
+ * @brief Encoder pixel secondary color.
+*/
+ZephyrRgbLed encSecColor = {
+  .b = 0x00,
+  .g = 0x00,
+  .r = 0x0f,
+};
+
 int ledCtrlInit(void)
 {
   int rc;
@@ -50,6 +79,11 @@ int ledCtrlInit(void)
 uint32_t ledCtrlGetRpmChaserPxlCnt(void)
 {
   return ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET;
+}
+
+void ledCtrlSetRightEncoderDefaultMode(void)
+{
+
 }
 
 int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
