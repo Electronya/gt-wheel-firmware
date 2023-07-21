@@ -83,7 +83,9 @@ uint32_t ledCtrlGetRpmChaserPxlCnt(void)
 
 void ledCtrlSetRightEncoderDefaultMode(void)
 {
-
+  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].b = encDefColor.b;
+  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].g = encDefColor.g;
+  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].r = encDefColor.r;
 }
 
 int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
@@ -91,7 +93,8 @@ int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
   if(pixelCnt != ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET)
     return -EDOM;
 
-  bytecpy(ledStrip.rgbPixels + RPM_CHASER_PIXEL_OFFSET, pixels, 3 * pixelCnt);
+  bytecpy(ledStrip.rgbPixels + RPM_CHASER_PIXEL_OFFSET, pixels,
+    sizeof(ZephyrRgbLed) * pixelCnt);
   return 0;
 }
 

@@ -15,6 +15,7 @@
 
 #include <zephyr/ztest.h>
 #include <zephyr/fff.h>
+#include <zephyr/sys/util.h>
 
 #include "LedCtrl.h"
 #include "LedCtrl.c"
@@ -143,7 +144,28 @@ ZTEST(ledCtrl_suite, test_ledCtrlGetPixelCount)
 */
 ZTEST_F(ledCtrl_suite, test_ledCtrlSetRightEncoderDefaultMode_SetPixelColor)
 {
+  ZephyrRgbLed expectedPixels[LED_CTRL_PIXEL_CNT];
 
+  bytecpy(expectedPixels, fixture->newPixels,
+    sizeof(ZephyrRgbLed) * LED_CTRL_PIXEL_CNT);
+  expectedPixels[0].b = 0x0f;
+  expectedPixels[0].g = 0x00;
+  expectedPixels[0].r = 0x00;
+
+  ledStrip.pixelCount = LED_CTRL_PIXEL_CNT;
+  ledStrip.rgbPixels = fixture->newPixels;
+
+  ledCtrlSetRightEncoderDefaultMode();
+
+  for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT; ++i)
+  {
+    zassert_equal(expectedPixels[i].b, ledStrip.rgbPixels[i].b,
+      "ledCtrlSetRightEncoderDefaultMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].g, ledStrip.rgbPixels[i].g,
+      "ledCtrlSetRightEncoderDefaultMode failed to update the pixel data.");
+    zassert_equal(expectedPixels[i].r, ledStrip.rgbPixels[i].r,
+      "ledCtrlSetRightEncoderDefaultMode failed to update the pixel data.");
+  }
 }
 
 #define LED_CTRL_SET_PIXEL_TEST_CNT   2
