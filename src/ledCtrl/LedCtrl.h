@@ -34,23 +34,31 @@ uint32_t ledCtrlGetRpmChaserPxlCnt(void);
 
 /**
  * @brief   Set the right encoder pixel to default mode (blue).
+ *
+ * @return  0 if successful, the error code otherwise.
  */
-void ledCtrlSetRightEncPixelDefaultMode(void);
+int ledCtrlSetRightEncPixelDefaultMode(void);
 
 /**
  * @brief   Set the right encoder pixel to secondary mode (red).
+ *
+ * @return  0 if successful, the error code otherwise.
 */
-void ledCtrlSetRightEncPixelSecondaryMode(void);
+int ledCtrlSetRightEncPixelSecondaryMode(void);
 
 /**
  * @brief   Set the left encoder pixel to default mode (blue).
+ *
+ * @return  0 if successful, the error code otherwise.
  */
-void ledCtrlSetLeftEncPixelDefaultMode(void);
+int ledCtrlSetLeftEncPixelDefaultMode(void);
 
 /**
  * @brief   Set the left encoder pixel to secondary mode (red).
+ *
+ * @return  0 if successful, the error code otherwise.
 */
-void ledCtrlSetLeftEncPixelSecondaryMode(void);
+int ledCtrlSetLeftEncPixelSecondaryMode(void);
 
 /**
  * @brief   Set the pixel colors of the RMP chaser.
@@ -58,10 +66,10 @@ void ledCtrlSetLeftEncPixelSecondaryMode(void);
  *          to the strip.
  *
  * @param pixels    The pixel colors.
- * @param pixelCnt  The count of pixel.
+ *
  * @return          0 if successful, the error code otherwise.
  */
-int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt);
+int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels);
 
 #endif    /* LED_CTRL */
 

@@ -78,45 +78,67 @@ int ledCtrlInit(void)
 
 uint32_t ledCtrlGetRpmChaserPxlCnt(void)
 {
-  return ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET;
+  return zephyrLedStripGetPixelCnt(&ledStrip) - RPM_CHASER_PIXEL_OFFSET;
 }
 
-void ledCtrlSetRightEncPixelDefaultMode(void)
+int ledCtrlSetRightEncPixelDefaultMode(void)
 {
-  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].b = encDefColor.b;
-  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].g = encDefColor.g;
-  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].r = encDefColor.r;
+  int rc;
+
+  rc = zephyrLedStripSetPixelRgbColor(&ledStrip, RIGHT_ENCODER_PIXEL_IDX,
+    &encDefColor);
+  if(rc < 0)
+    return rc;
+
+  return zephyrLedStripUpdate(&ledStrip);
 }
 
-void ledCtrlSetRightEncPixelSecondaryMode(void)
+int ledCtrlSetRightEncPixelSecondaryMode(void)
 {
-  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].b = encSecColor.b;
-  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].g = encSecColor.g;
-  ledStrip.rgbPixels[RIGHT_ENCODER_PIXEL_IDX].r = encSecColor.r;
+  int rc;
+
+  rc = zephyrLedStripSetPixelRgbColor(&ledStrip, RIGHT_ENCODER_PIXEL_IDX,
+    &encSecColor);
+  if(rc < 0)
+    return rc;
+
+  return zephyrLedStripUpdate(&ledStrip);
 }
 
-void ledCtrlSetLeftEncPixelDefaultMode(void)
+int ledCtrlSetLeftEncPixelDefaultMode(void)
 {
-  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].b = encDefColor.b;
-  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].g = encDefColor.g;
-  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].r = encDefColor.r;
+  int rc;
+
+  rc = zephyrLedStripSetPixelRgbColor(&ledStrip, LEFT_ENCODER_PIXEL_IDX,
+    &encDefColor);
+  if(rc < 0)
+    return rc;
+
+  return zephyrLedStripUpdate(&ledStrip);
 }
 
-void ledCtrlSetLeftEncPixelSecondaryMode(void)
+int ledCtrlSetLeftEncPixelSecondaryMode(void)
 {
-  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].b = encSecColor.b;
-  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].g = encSecColor.g;
-  ledStrip.rgbPixels[LEFT_ENCODER_PIXEL_IDX].r = encSecColor.r;
+  int rc;
+
+  rc = zephyrLedStripSetPixelRgbColor(&ledStrip, LEFT_ENCODER_PIXEL_IDX,
+    &encSecColor);
+  if(rc < 0)
+    return rc;
+
+  return zephyrLedStripUpdate(&ledStrip);
 }
 
-int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels, size_t pixelCnt)
+int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels)
 {
-  if(pixelCnt != ledStrip.pixelCount - RPM_CHASER_PIXEL_OFFSET)
-    return -EDOM;
+  int rc;
 
-  bytecpy(ledStrip.rgbPixels + RPM_CHASER_PIXEL_OFFSET, pixels,
-    sizeof(ZephyrRgbLed) * pixelCnt);
-  return 0;
+  rc = zephyrLedStripSetPixelsRgbColor(&ledStrip, RPM_CHASER_PIXEL_OFFSET,
+    ledStrip.pixelCount, pixels);
+  if(rc < 0)
+    return rc;
+
+  return zephyrLedStripUpdate(&ledStrip);
 }
 
 /** @} */
