@@ -3,8 +3,8 @@
  *
  * @file      ledCtrlHw.h
  * @author    jbacon
- * @date      2023-05-06
- * @brief     Led Control Hardware
+ * @date      2023-07-20
+ * @brief     Led Control Module
  *
  *            This file is the implementation of the LED control module.
  *
@@ -39,7 +39,7 @@
 #define RPM_CHASER_PIXEL_OFFSET       2
 
 /* Setting module logging */
-LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
+LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 
 #ifndef CONFIG_ZTEST
 static ZephyrLedStrip ledStrip = {
