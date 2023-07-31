@@ -161,8 +161,8 @@
     shifterdown = &shifter_down;
     shifterup = &shifter_up;
     /* rocker */
-    rockerleft = &rocker_left;
-    rockerright = &rocker_right;
+    rockerleft = &left_rocker;
+    rockerright = &right_rocker;
     /* led strip */
     stripcounter = &stripcounter;
     stripdataline = &stripdataline;

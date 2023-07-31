@@ -17,8 +17,8 @@
 #include <zephyr/fff.h>
 #include <zephyr/sys/util.h>
 
-#include "LedCtrl.h"
-#include "LedCtrl.c"
+#include "ledCtrl.h"
+#include "ledCtrl.c"
 
 #include "zephyrLedStrip.h"
 

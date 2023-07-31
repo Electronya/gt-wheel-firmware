@@ -17,7 +17,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
 
-#include "LedCtrl.h"
+#include "ledCtrl.h"
 #include "zephyrCommon.h"
 
 #define LED_CTRL_MODULE_NAME led_ctrl_module
