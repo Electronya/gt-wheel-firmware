@@ -58,6 +58,10 @@
 			gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
 			label = "Button Col6";
 		};
+    stripdataline: dataline {
+      gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
+			label = "ALIVE LED";
+    };
 	};
 
 	gpio_keys {
@@ -160,7 +164,8 @@
     rockerleft = &rocker_left;
     rockerright = &rocker_right;
     /* led strip */
-    ledstrip = &led_strip;
+    stripcounter = &stripcounter;
+    stripdataline = &stripdataline;
     /* adc */
     adc = &adc1;
     /* usb */
@@ -238,4 +243,16 @@
 &iwdg {
   // TODO: enable at the end of dev.
 	status = "disabled";
+};
+
+&timers6 {
+  /* Timer freq: ~6000000Hz */
+  st,prescaler = <8>; // TODO: remove when working from real hardware.
+	// st,prescaler = <6>;
+	status = "okay";
+  stripcounter: counter {
+		compatible = "st,stm32-counter";
+		status = "okay";
+		label = "LED strip counter";
+	};
 };
