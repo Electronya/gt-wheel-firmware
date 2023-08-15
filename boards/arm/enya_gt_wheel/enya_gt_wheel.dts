@@ -115,19 +115,19 @@
 			gpios = <&gpioa 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row11";
 		};
-    shifter_down: shifter_down {
+    shifter_left: left_shifter {
 			gpios = <&gpioa 2 (GPIO_ACTIVE_LOW)>;
       label = "Button Row11";
 		};
-    shifter_up: shifter_up {
+    shifter_right: right_shifter {
 			gpios = <&gpioa 3 (GPIO_ACTIVE_LOW)>;
       label = "Button Row11";
 		};
-    left_rocker: rocker_left {
+    rocker_left: left_rocker {
 			gpios = <&gpioc 14 (GPIO_ACTIVE_LOW)>;
       label = "Button Row11";
 		};
-    right_rocker: rocker_right {
+    rocker_right: right_rocker {
 			gpios = <&gpioc 13 (GPIO_ACTIVE_LOW)>;
       label = "Button Row11";
 		};
@@ -158,11 +158,11 @@
     row10 = &btn_row10;
     row11 = &btn_row11;
     /* shifter */
-    shifterdown = &shifter_down;
-    shifterup = &shifter_up;
+    shifterleft = &shifter_left;
+    shifterright = &shifter_right;
     /* rocker */
-    rockerleft = &left_rocker;
-    rockerright = &right_rocker;
+    rockerleft = &rocker_left;
+    rockerright = &rocker_right;
     /* led strip */
     stripcounter = &stripcounter;
     stripdataline = &stripdataline;

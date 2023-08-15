@@ -15,22 +15,226 @@
 
 #include <zephyr/ztest.h>
 #include <zephyr/fff.h>
+#include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
 
 #include "buttonMngr.h"
 #include "buttonMngr.c"
 
+#include "zephyrGpio.h"
+
 DEFINE_FFF_GLOBALS;
 
-ZTEST_SUITE(buttonMngr_suite, NULL, NULL, NULL, NULL, NULL);
+/* mocks */
+FAKE_VALUE_FUNC(int, zephyrGpioInit, ZephyrGpio*, ZephyrGpioDir);
 
 /**
- * @test  buttonMngrInit must return the error code if the initialization
- *        fails.
+ * @brief The total of row and column GPIOs.
 */
-ZTEST(buttonMngr_suite, test_buttonMngrInit_Fail)
+#define TOTAL_ROW_COL_COUNT   (BUTTON_ROW_COUNT + BUTTON_COL_COUNT)
+
+/**
+ * @brief The total number of GPIOs.
+*/
+#define TOTAL_GPIO_COUNT      TOTAL_ROW_COL_COUNT + BUTTON_SHIFTER_COUNT + \
+                              BUTTON_ROCKER_COUNT
+
+/**
+ * @brief The test fixture.
+*/
+struct buttonMngr_suite_fixture
 {
-  zassert_true(1);
+  int gpioInitRetVals[TOTAL_GPIO_COUNT];  /**< GPIO init mock return values. */
+};
+
+static void *buttonMngrSuiteSetup(void)
+{
+  struct buttonMngr_suite_fixture *fixture =
+    k_malloc(sizeof(struct buttonMngr_suite_fixture));
+  zassume_not_null(fixture, NULL);
+
+  return (void *)fixture;
+}
+
+static void buttonMngrSuiteTeardown(void *f)
+{
+  k_free(f);
+}
+
+static void buttonMngrCaseSetup(void *f)
+{
+  int successRet = 0;
+  struct buttonMngr_suite_fixture *fixture =
+    (struct buttonMngr_suite_fixture *)f;
+
+  for(uint8_t i = 0; i < TOTAL_GPIO_COUNT; ++i)
+    fixture->gpioInitRetVals[i] = successRet;
+
+  RESET_FAKE(zephyrGpioInit);
+}
+
+ZTEST_SUITE(buttonMngr_suite, NULL, buttonMngrSuiteSetup, buttonMngrCaseSetup,
+  NULL, buttonMngrSuiteTeardown);
+
+/**
+ * @test  buttonMngrInit must return the error code as soon as the
+ *        initialization of one row fails.
+*/
+ZTEST_F(buttonMngr_suite, test_buttonMngrInit_RowInitFail)
+{
+  int failRet = -EIO;
+  int successRet = 0;
+
+  for(uint8_t i = 0; i < BUTTON_ROW_COUNT; ++i)
+  {
+    if(i > 0)
+      fixture->gpioInitRetVals[i - 1] = successRet;
+
+    fixture->gpioInitRetVals[i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioInit, fixture->gpioInitRetVals, i + 1);
+
+    zassert_equal(failRet, buttonMngrInit());
+    zassert_equal(i + 1, zephyrGpioInit_fake.call_count);
+    for(uint8_t j = 0; j > i; ++j)
+    {
+      zassert_equal(rows + j, zephyrGpioInit_fake.arg0_history[j]);
+      zassert_equal(GPIO_IN, zephyrGpioInit_fake.arg1_history[j]);
+    }
+    RESET_FAKE(zephyrGpioInit);
+  }
+}
+
+/**
+ * @test  buttonMngrInit must return the error code as soon as the
+ *        initialization of one column fails.
+*/
+ZTEST_F(buttonMngr_suite, test_buttonMngrInit_ColInitFail)
+{
+  int failRet = -EIO;
+  int successRet = 0;
+
+  for(uint8_t i = 0; i < BUTTON_COL_COUNT; ++i)
+  {
+    if(i > 0)
+      fixture->gpioInitRetVals[BUTTON_ROW_COUNT + i - 1] = successRet;
+
+    fixture->gpioInitRetVals[BUTTON_ROW_COUNT + i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioInit, fixture->gpioInitRetVals,
+      BUTTON_ROW_COUNT + i + 1);
+
+    zassert_equal(failRet, buttonMngrInit());
+    zassert_equal(BUTTON_ROW_COUNT + i + 1, zephyrGpioInit_fake.call_count);
+    for(uint8_t j = 0; j > i; ++j)
+    {
+      zassert_equal(columns + j,
+        zephyrGpioInit_fake.arg0_history[BUTTON_ROW_COUNT + j]);
+      zassert_equal(GPIO_OUT_CLR,
+        zephyrGpioInit_fake.arg1_history[BUTTON_ROW_COUNT + j]);
+    }
+    RESET_FAKE(zephyrGpioInit);
+  }
+}
+
+/**
+ * @test  buttonMngrInit must return the error code as soon as
+ *        the initialization of the one of the shifter fails.
+*/
+ZTEST_F(buttonMngr_suite, test_ButtonMngr_ShifterFail)
+{
+  int failRet = -EIO;
+  int successRet = 0;
+
+  for(uint8_t i = 0; i < BUTTON_SHIFTER_COUNT; ++i)
+  {
+    if(i > 0)
+      fixture->gpioInitRetVals[TOTAL_ROW_COL_COUNT + i - 1] = successRet;
+
+    fixture->gpioInitRetVals[TOTAL_ROW_COL_COUNT + i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioInit, fixture->gpioInitRetVals,
+      TOTAL_ROW_COL_COUNT + i + 1);
+
+    zassert_equal(failRet, buttonMngrInit());
+    zassert_equal(TOTAL_ROW_COL_COUNT + i + 1, zephyrGpioInit_fake.call_count);
+    for(uint8_t j = 0; j < i; ++j)
+    {
+      zassert_equal(shifters + j,
+        zephyrGpioInit_fake.arg0_history[TOTAL_ROW_COL_COUNT + j]);
+      zassert_equal(GPIO_IN,
+        zephyrGpioInit_fake.arg1_history[TOTAL_ROW_COL_COUNT + j]);
+    }
+  }
+}
+
+/**
+ * @test  buttonMngrInit must return the error code as soon as
+ *        the initialization of the one of the rocker fails.
+*/
+ZTEST_F(buttonMngr_suite, test_ButtonMngr_RockerFail)
+{
+  int failRet = -EIO;
+  int successRet = 0;
+  uint8_t rockerOffset = TOTAL_ROW_COL_COUNT + BUTTON_SHIFTER_COUNT;
+
+  for(uint8_t i = 0; i < BUTTON_ROCKER_COUNT; ++i)
+  {
+    if(i > 0)
+      fixture->gpioInitRetVals[rockerOffset + i - 1] = successRet;
+
+    fixture->gpioInitRetVals[rockerOffset + i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioInit, fixture->gpioInitRetVals,
+      rockerOffset + i + 1);
+
+    zassert_equal(failRet, buttonMngrInit());
+    zassert_equal(rockerOffset + i + 1, zephyrGpioInit_fake.call_count);
+    for(uint8_t j = 0; j < i; ++j)
+    {
+      zassert_equal(rockers + j,
+        zephyrGpioInit_fake.arg0_history[rockerOffset + j]);
+      zassert_equal(GPIO_IN,
+        zephyrGpioInit_fake.arg1_history[rockerOffset + j]);
+    }
+  }
+}
+
+/**
+ * @test  buttonMngrInit must return the success code when the initialization
+ *        succeeds.
+*/
+ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
+{
+  int successRet = 0;
+  ZephyrGpio *expectedGpio;
+  ZephyrGpioDir expectedDir;
+
+  SET_RETURN_SEQ(zephyrGpioInit, fixture->gpioInitRetVals, TOTAL_GPIO_COUNT);
+
+  zassert_equal(successRet, buttonMngrInit());
+  zassert_equal(TOTAL_GPIO_COUNT, zephyrGpioInit_fake.call_count);
+  for(uint8_t i = 0; i < TOTAL_GPIO_COUNT; ++i)
+  {
+    if(i < BUTTON_ROW_COUNT)
+    {
+      expectedGpio = rows + i;
+      expectedDir = GPIO_IN;
+    }
+    else if(i < TOTAL_ROW_COL_COUNT)
+    {
+      expectedGpio = columns + (i - BUTTON_ROW_COUNT);
+      expectedDir = GPIO_OUT_CLR;
+    }
+    else if(i < TOTAL_ROW_COL_COUNT + BUTTON_SHIFTER_COUNT)
+    {
+      expectedGpio = shifters + (i - TOTAL_ROW_COL_COUNT);
+      expectedDir = GPIO_IN;
+    }
+    else
+    {
+      expectedGpio = rockers + (i - TOTAL_ROW_COL_COUNT - BUTTON_SHIFTER_COUNT);
+      expectedDir = GPIO_IN;
+    }
+    zassert_equal(expectedGpio, zephyrGpioInit_fake.arg0_history[i]);
+    zassert_equal(expectedDir, zephyrGpioInit_fake.arg1_history[i]);
+  }
 }
 
 /** @} */
