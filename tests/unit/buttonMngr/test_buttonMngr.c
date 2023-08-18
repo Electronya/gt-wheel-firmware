@@ -52,7 +52,7 @@ struct buttonMngr_suite_fixture
   int gpioInitRetVals[TOTAL_GPIO_COUNT];                    /**< GPIO init mock return values. */
   int colSetRetVals[BUTTON_COL_COUNT];                      /**< Column set return values. */
   int colClearRetVals[BUTTON_COL_COUNT];                    /**< Column clear return values. */
-  int rowReadRetVals[BUTTON_ROW_COUNT * BUTTON_COL_COUNT];  /**< Row read return values. */
+  int readRetVals[BUTTON_ROW_COUNT * BUTTON_COL_COUNT];  /**< Row read return values. */
 };
 
 static void *buttonMngrSuiteSetup(void)
@@ -87,9 +87,9 @@ static void buttonMngrCaseSetup(void *f)
   for(uint8_t i = 0; i < BUTTON_ROW_COUNT * BUTTON_COL_COUNT; ++i)
   {
     if(i % 2)
-      fixture->rowReadRetVals[i] = BUTTON_DEPRESSED;
+      fixture->readRetVals[i] = BUTTON_DEPRESSED;
     else
-      fixture->rowReadRetVals[i] = BUTTON_PRESSED;
+      fixture->readRetVals[i] = BUTTON_PRESSED;
   }
 
   for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
@@ -173,9 +173,9 @@ ZTEST_F(buttonMngr_suite, test_readButtonMatrix_ReadRowFail)
     zephyrGpioSet_fake.return_val = successRet;
 
     if(i > 0)
-      fixture->rowReadRetVals[i - 1] = successRet;
-    fixture->rowReadRetVals[i] = failRet;
-    SET_RETURN_SEQ(zephyrGpioRead, fixture->rowReadRetVals, i + 1);
+      fixture->readRetVals[i - 1] = successRet;
+    fixture->readRetVals[i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioRead, fixture->readRetVals, i + 1);
 
     zephyrGpioClear_fake.return_val = successRet;
 
@@ -199,7 +199,7 @@ ZTEST_F(buttonMngr_suite, test_readButtonMatrix_Success)
   int successRet = 0;
 
   SET_RETURN_SEQ(zephyrGpioSet, fixture->colSetRetVals, BUTTON_COL_COUNT);
-  SET_RETURN_SEQ(zephyrGpioRead, fixture->rowReadRetVals,
+  SET_RETURN_SEQ(zephyrGpioRead, fixture->readRetVals,
     BUTTON_ROW_COUNT * BUTTON_COL_COUNT);
   SET_RETURN_SEQ(zephyrGpioClear, fixture->colClearRetVals, BUTTON_COL_COUNT);
 
@@ -217,7 +217,51 @@ ZTEST_F(buttonMngr_suite, test_readButtonMatrix_Success)
   for(uint8_t i = 0; i < BUTTON_ROW_COUNT * BUTTON_COL_COUNT; ++i)
   {
     zassert_equal(rows + (i % 12), zephyrGpioRead_fake.arg0_history[i]);
-    zassert_equal(fixture->rowReadRetVals[i], buttonStates[i]);
+    zassert_equal(fixture->readRetVals[i], buttonStates[i]);
+  }
+}
+
+/**
+ * @test  readButtonShifters must return the error code if any of the read
+ *        operation fails.
+*/
+ZTEST_F(buttonMngr_suite, test_readButtonShifters_ReadFail)
+{
+  int failRet = -EIO;
+  int successRet = 0;
+
+  for(uint8_t i = 0; i < BUTTON_SHIFTER_COUNT; ++i)
+  {
+    if(i > 0)
+      fixture->readRetVals[i - 1] = successRet;
+    fixture->readRetVals[i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioRead, fixture->readRetVals, i + 1);
+
+    zassert_equal(failRet, readButtonShifters());
+    zassert_equal(i + 1, zephyrGpioRead_fake.call_count);
+    for(uint8_t j = 0; j > i; ++j)
+      zassert_equal(shifters + j, zephyrGpioRead_fake.arg0_history[j]);
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+/**
+ * @test  readButtonShifters must return the success code and update the
+ *        shifters button states when all operations succeed.
+*/
+ZTEST_F(buttonMngr_suite, test_readButtonShifters_Success)
+{
+  int successRet = 0;
+
+  SET_RETURN_SEQ(zephyrGpioRead, fixture->readRetVals, BUTTON_SHIFTER_COUNT);
+
+  zassert_equal(successRet, readButtonShifters());
+  zassert_equal(BUTTON_SHIFTER_COUNT, zephyrGpioRead_fake.call_count);
+  for(uint8_t i = 0; i < BUTTON_SHIFTER_COUNT; ++i)
+  {
+    zassert_equal(shifters + i, zephyrGpioRead_fake.arg0_history[i]);
+    zassert_equal(fixture->readRetVals[i],
+      buttonStates[LEFT_SHIFTER_IDX + i]);
   }
 }
 

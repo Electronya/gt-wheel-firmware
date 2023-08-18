@@ -23,16 +23,6 @@
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /**
- * @brief The shifter button count.
-*/
-#define BUTTON_SHIFTER_COUNT    2
-
-/**
- * @brief The rocker button count.
-*/
-#define BUTTON_ROCKER_COUNT     2
-
-/**
  * @brief The encoder button count.
 */
 #define BUTTON_ENCODER_COUNT    2
@@ -125,6 +115,20 @@ static int readButtonMatrix(void)
     rc = buttonState;
 
   return rc;
+}
+
+static int readButtonShifters(void)
+{
+  int rc = 0;
+
+  for(uint8_t i = 0; i < BUTTON_SHIFTER_COUNT && rc >= 0; ++i)
+  {
+    rc = zephyrGpioRead(shifters + i);
+    if(rc >= 0)
+      buttonStates[LEFT_SHIFTER_IDX + i] = (WheelButtonState)rc;
+  }
+
+   return rc;
 }
 
 int buttonMngrInit(void)

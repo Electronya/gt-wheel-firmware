@@ -27,6 +27,16 @@
 #define BUTTON_COL_COUNT        7
 
 /**
+ * @brief The shifter button count.
+*/
+#define BUTTON_SHIFTER_COUNT    2
+
+/**
+ * @brief The rocker button count.
+*/
+#define BUTTON_ROCKER_COUNT     2
+
+/**
  * @brief The button index x(button name, button column, button row).
 */
 #define LIST_BUTTON_IDX   X(TC_0_SELECT_IDX, 0, 0)      \
