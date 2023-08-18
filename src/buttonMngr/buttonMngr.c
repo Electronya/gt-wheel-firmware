@@ -23,16 +23,6 @@
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /**
- * @brief The button row count.
-*/
-#define BUTTON_ROW_COUNT        12
-
-/**
- * @brief The button column count.
-*/
-#define BUTTON_COL_COUNT        6
-
-/**
  * @brief The shifter button count.
 */
 #define BUTTON_SHIFTER_COUNT    2
@@ -93,29 +83,49 @@ ZephyrGpio rockers[BUTTON_ROCKER_COUNT];
 #endif
 
 /**
- * @brief The button matrix states.
+ * @brief The button states.
 */
-WheelButtonState matrixStates[BUTTON_COL_COUNT][BUTTON_ROW_COUNT];
+WheelButtonState buttonStates[BUTTON_COUNT];
 
 /**
- * @brief The left shifter (down) state.
-*/
-WheelButtonState leftShifterState;
+ * @brief   Read the button matrix.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+static int readButtonMatrix(void)
+{
+  int rc;
+  int buttonState = 0;
+  bool keepReading = true;
 
-/**
- * @brief The right shifter (up) state.
-*/
-WheelButtonState rightShifterState;
+  for(uint8_t col = 0; col < BUTTON_COL_COUNT && keepReading; ++col)
+  {
+    /* set the column to read */
+    rc = zephyrGpioSet(columns + col);
+    if(rc < 0)
+      return rc;
 
-/**
- * @brief The left rocker state.
-*/
-WheelButtonState leftRockerState;
+    for(uint8_t row = 0; row < BUTTON_ROW_COUNT && buttonState >= 0; ++row)
+    {
+      buttonState = zephyrGpioRead(rows + row);
+      if(buttonState < 0)
+        keepReading = false;
+      else
+        buttonStates[BUTTON_ROW_COUNT * col + row] =
+          (WheelButtonState)buttonState;
+    }
 
-/**
- * @brief The right rocker state.
-*/
-WheelButtonState rightRockerState;
+    /* clear the column read */
+    rc = zephyrGpioClear(columns + col);
+    if(rc < 0)
+      keepReading = false;
+  }
+
+  if(buttonState < 0)
+    rc = buttonState;
+
+  return rc;
+}
 
 int buttonMngrInit(void)
 {
