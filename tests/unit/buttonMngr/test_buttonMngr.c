@@ -266,6 +266,50 @@ ZTEST_F(buttonMngr_suite, test_readButtonShifters_Success)
 }
 
 /**
+ * @test  readButtonRockers must return the error code if any of the read
+ *        operation fails.
+*/
+ZTEST_F(buttonMngr_suite, test_readButtonRockers_ReadFail)
+{
+  int failRet = -EIO;
+  int successRet = 0;
+
+  for(uint8_t i = 0; i < BUTTON_ROCKER_COUNT; ++i)
+  {
+    if(i > 0)
+      fixture->readRetVals[i - 1] = successRet;
+    fixture->readRetVals[i] = failRet;
+    SET_RETURN_SEQ(zephyrGpioRead, fixture->readRetVals, i + 1);
+
+    zassert_equal(failRet, readButtonRockers());
+    zassert_equal(i + 1, zephyrGpioRead_fake.call_count);
+    for(uint8_t j = 0; j > i; ++j)
+      zassert_equal(rockers + j, zephyrGpioRead_fake.arg0_history[j]);
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+/**
+ * @test  readButtonRockers must return the success code and update the
+ *        rockers button states when all operations succeed.
+*/
+ZTEST_F(buttonMngr_suite, test_readButtonRockers_Success)
+{
+  int successRet = 0;
+
+  SET_RETURN_SEQ(zephyrGpioRead, fixture->readRetVals, BUTTON_ROCKER_COUNT);
+
+  zassert_equal(successRet, readButtonRockers());
+  zassert_equal(BUTTON_ROCKER_COUNT, zephyrGpioRead_fake.call_count);
+  for(uint8_t i = 0; i < BUTTON_ROCKER_COUNT; ++i)
+  {
+    zassert_equal(rockers + i, zephyrGpioRead_fake.arg0_history[i]);
+    zassert_equal(fixture->readRetVals[i],
+      buttonStates[LEFT_ROCKER_IDX + i]);
+  }
+}
+
+/**
  * @test  buttonMngrInit must return the error code as soon as the
  *        initialization of one row fails.
 */

@@ -117,6 +117,11 @@ static int readButtonMatrix(void)
   return rc;
 }
 
+/**
+ * @brief   Read the shifter buttons.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
 static int readButtonShifters(void)
 {
   int rc = 0;
@@ -126,6 +131,25 @@ static int readButtonShifters(void)
     rc = zephyrGpioRead(shifters + i);
     if(rc >= 0)
       buttonStates[LEFT_SHIFTER_IDX + i] = (WheelButtonState)rc;
+  }
+
+   return rc;
+}
+
+/**
+ * @brief   Read the rocker buttons.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+static int readButtonRockers(void)
+{
+  int rc = 0;
+
+  for(uint8_t i = 0; i < BUTTON_SHIFTER_COUNT && rc >= 0; ++i)
+  {
+    rc = zephyrGpioRead(rockers + i);
+    if(rc >= 0)
+      buttonStates[LEFT_ROCKER_IDX + i] = (WheelButtonState)rc;
   }
 
    return rc;
