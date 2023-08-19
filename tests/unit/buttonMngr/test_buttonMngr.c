@@ -52,7 +52,8 @@ struct buttonMngr_suite_fixture
   int gpioInitRetVals[TOTAL_GPIO_COUNT];                    /**< GPIO init mock return values. */
   int colSetRetVals[BUTTON_COL_COUNT];                      /**< Column set return values. */
   int colClearRetVals[BUTTON_COL_COUNT];                    /**< Column clear return values. */
-  int readRetVals[BUTTON_ROW_COUNT * BUTTON_COL_COUNT];  /**< Row read return values. */
+  int readRetVals[BUTTON_ROW_COUNT * BUTTON_COL_COUNT];     /**< Row read return values. */
+  WheelButtonState buttonStates[BUTTON_COUNT];              /**< The button states. */
 };
 
 static void *buttonMngrSuiteSetup(void)
@@ -90,6 +91,14 @@ static void buttonMngrCaseSetup(void *f)
       fixture->readRetVals[i] = BUTTON_DEPRESSED;
     else
       fixture->readRetVals[i] = BUTTON_PRESSED;
+  }
+
+  for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
+  {
+    if(i % 2)
+      fixture->buttonStates[i] = BUTTON_DEPRESSED;
+    else
+      fixture->buttonStates[i] = BUTTON_PRESSED;
   }
 
   for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
@@ -468,6 +477,37 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
     zassert_equal(expectedGpio, zephyrGpioInit_fake.arg0_history[i]);
     zassert_equal(expectedDir, zephyrGpioInit_fake.arg1_history[i]);
   }
+}
+
+#define GET_STATE_FAIL_TEST_CNT     2
+/**
+ * @test  buttonMngrGetButtonStates must return the error code when requested
+ *        button state count does not correspond to the actual count.
+*/
+ZTEST_F(buttonMngr_suite, test_buttonMngrGetButtonStates_BadCount)
+{
+  int failRet = -EINVAL;
+  size_t badCounts[GET_STATE_FAIL_TEST_CNT] = {BUTTON_COUNT - 1,
+                                               BUTTON_COUNT + 1};
+
+  for(uint8_t i = 0; i < GET_STATE_FAIL_TEST_CNT; ++i)
+    zassert_equal(failRet, buttonMngrGetButtonStates(fixture->buttonStates,
+      badCounts[i]));
+}
+
+/**
+ * @test  buttonMngrGetButtonStates must return the success code and copy the
+ *        current button states to the provided buffer.
+*/
+ZTEST_F(buttonMngr_suite, test_buttonMngrGetButtonStates_Success)
+{
+  int successRet = 0;
+
+  zassert_equal(successRet, buttonMngrGetButtonStates(fixture->buttonStates,
+    BUTTON_COUNT));
+
+  for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
+    zassert_equal(buttonStates[i], fixture->buttonStates[i]);
 }
 
 /** @} */

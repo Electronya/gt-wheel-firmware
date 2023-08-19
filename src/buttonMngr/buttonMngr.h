@@ -152,6 +152,16 @@ typedef enum
  */
 int buttonMngrInit(void);
 
+/**
+ * @brief   Get the current button states.
+ *
+ * @param states  The current button states.
+ * @param count   The count of button states to get.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+int buttonMngrGetButtonStates(WheelButtonState *states, size_t count);
+
 #endif    /* BUTTON_MNGR */
 
 /** @} */

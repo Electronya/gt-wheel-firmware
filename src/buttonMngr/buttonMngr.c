@@ -15,6 +15,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/util.h>
 
 #include "buttonMngr.h"
 #include "zephyrCommon.h"
@@ -172,6 +173,16 @@ int buttonMngrInit(void)
     rc = zephyrGpioInit(rockers + i, GPIO_IN);
 
   return rc;
+}
+
+int buttonMngrGetButtonStates(WheelButtonState *states, size_t count)
+{
+  if(count < BUTTON_COUNT || count > BUTTON_COUNT)
+    return -EINVAL;
+
+  bytecpy(states, buttonStates, count * sizeof(WheelButtonState));
+
+  return 0;
 }
 
 /** @} */
