@@ -177,6 +177,8 @@ int buttonMngrGetAllStates(WheelButtonState *states, size_t count);
  */
 int buttonMngrGetEncoderStates(WheelButtonState *states, size_t count);
 
+// TODO: implement the thread + mutex.
+
 #endif    /* BUTTON_MNGR */
 
 /** @} */
