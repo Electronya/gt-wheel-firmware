@@ -23,11 +23,6 @@
 
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
-/**
- * @brief The encoder button count.
-*/
-#define BUTTON_ENCODER_COUNT    2
-
 /* Setting module logging */
 LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 
@@ -175,12 +170,23 @@ int buttonMngrInit(void)
   return rc;
 }
 
-int buttonMngrGetButtonStates(WheelButtonState *states, size_t count)
+int buttonMngrGetAllStates(WheelButtonState *states, size_t count)
 {
-  if(count < BUTTON_COUNT || count > BUTTON_COUNT)
+  if(count != BUTTON_COUNT)
     return -EINVAL;
 
   bytecpy(states, buttonStates, count * sizeof(WheelButtonState));
+
+  return 0;
+}
+
+int buttonMngrGetEncoderStates(WheelButtonState *states, size_t count)
+{
+  if(count != BUTTON_ENCODER_COUNT)
+    return -EINVAL;
+
+  states[0] = buttonStates[LEFT_ENC_MODE_IDX];
+  states[1] = buttonStates[RIGHT_ENC_MODE_IDX];
 
   return 0;
 }
