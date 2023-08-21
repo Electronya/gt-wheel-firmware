@@ -6,3 +6,21 @@ tests:
     extra_configs:
       - CONFIG_ZTEST=y
       - CONFIG_ZTEST_NEW_API=y
+      - CONFIG_GPIO=y
+      - CONFIG_COUNTER=y
+      - CONFIG_ENYA_ZEPHYR_WRAPPER=y
+      - CONFIG_ENYA_GPIO=y
+      - CONFIG_ENYA_COUNTER=y
+      - CONFIG_ENYA_LED_STRIP=y
+      - CONFIG_HEAP_MEM_POOL_SIZE=256
+  gt_wheel.buttonMngr:
+    platform_allow: qemu_cortex_m0
+    tags: buttonMngr
+    extra_args: TEST_SUITE=buttonMngr
+    extra_configs:
+      - CONFIG_ZTEST=y
+      - CONFIG_ZTEST_NEW_API=y
+      - CONFIG_GPIO=y
+      - CONFIG_ENYA_ZEPHYR_WRAPPER=y
+      - CONFIG_ENYA_GPIO=y
+      - CONFIG_HEAP_MEM_POOL_SIZE=640

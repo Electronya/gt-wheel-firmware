@@ -15,45 +15,63 @@
 
 #include <zephyr/ztest.h>
 #include <zephyr/fff.h>
+#include <zephyr/sys/util.h>
 
-// #include "LedCtrl.h"
-// #include "LedCtrl.c"
+#include "ledCtrl.h"
+#include "ledCtrl.c"
 
-// #include "zephyrLedStrip.h"
+#include "zephyrLedStrip.h"
 
 DEFINE_FFF_GLOBALS;
-ZTEST_SUITE(ledCtrl_suite, NULL, NULL, NULL, NULL, NULL);
+
+/* mocks */
+FAKE_VALUE_FUNC(int, zephyrLedStripInit, ZephyrLedStrip*, ZephyrLedStripClrFmt,
+  uint32_t);
+FAKE_VALUE_FUNC(uint32_t, zephyrLedStripGetPixelCnt, ZephyrLedStrip*);
+FAKE_VALUE_FUNC(int, zephyrLedStripSetGrbPixel, ZephyrLedStrip*, uint32_t,
+  const ZephyrGrbPixel*);
+FAKE_VALUE_FUNC(int, zephyrLedStripSetGrbPixels, ZephyrLedStrip*, uint32_t,
+  uint32_t, const ZephyrGrbPixel*);
+FAKE_VALUE_FUNC(int, zephyrLedStripUpdate, ZephyrLedStrip*);
+
+static void ledCtrlCaseSetup(void *f)
+{
+  RESET_FAKE(zephyrLedStripInit);
+  RESET_FAKE(zephyrLedStripGetPixelCnt);
+  RESET_FAKE(zephyrLedStripSetGrbPixel);
+  RESET_FAKE(zephyrLedStripSetGrbPixels);
+  RESET_FAKE(zephyrLedStripUpdate);
+}
+
+ZTEST_SUITE(ledCtrl_suite, NULL, NULL, ledCtrlCaseSetup, NULL, NULL);
 
 #define LED_CTRL_IS_DEV_READY_TEST_CNT  3
-// FAKE_VALUE_FUNC(int, zephyrLedStripInit, ZephyrLedStrip*, ZephyrLedStripClrFmt,
-//   uint32_t);
 /**
  * @test  ledCtrlInit must try to initialize the LED strip and return
  *        the error code if the operation fails.
 */
 ZTEST(ledCtrl_suite, test_ledCtrlInit_Fail)
 {
-  zassert_true(true);
-  // int returnVals[LED_CTRL_IS_DEV_READY_TEST_CNT] = {-ENODEV, -ENOSPC, -EINVAL};
-  // int pixelCounts[LED_CTRL_IS_DEV_READY_TEST_CNT] = {1, 24, 250};
-  // int result;
-  // for(uint8_t i = 0; i < LED_CTRL_IS_DEV_READY_TEST_CNT; ++i)
-  // {
-  //   ledStrip.pixelCount = pixelCounts[i];
-  //   RESET_FAKE(zephyrLedStripInit);
-  //   zephyrLedStripInit_fake.return_val = returnVals[i];
-  //   result = ledCtrlInit();
-  //   zassert_equal(zephyrLedStripInit_fake.call_count, 1,
-  //     "ledCtrlInit failed to initialize the LED strip");
-  //   zassert_equal(zephyrLedStripInit_fake.arg0_val, &ledStrip,
-  //     "ledCtrlInit failed to initialize the right LED strip");
-  //   zassert_equal(zephyrLedStripInit_fake.arg1_val, LED_STRIP_COLOR_RGB,
-  //     "ledCtrlInit failed to initialize the LED strip with the right color format");
-  //   zassert_equal(zephyrLedStripInit_fake.arg2_val, pixelCounts[i],
-  //     "ledCtrlInit failed to initialize the LED strip with the right pixel count");
-  //   zassert_equal(result, returnVals[i],
-  //     "ledCtrlInit failed to return the error code.");
-  // }
+  int returnVals[LED_CTRL_IS_DEV_READY_TEST_CNT] = {-ENODEV, -ENOSPC, -EINVAL};
+  int pixelCounts[LED_CTRL_IS_DEV_READY_TEST_CNT] = {1, 24, 250};
+  int result;
+  for(uint8_t i = 0; i < LED_CTRL_IS_DEV_READY_TEST_CNT; ++i)
+  {
+    ledStrip.pixelCount = pixelCounts[i];
+    RESET_FAKE(zephyrLedStripInit);
+    zephyrLedStripInit_fake.return_val = returnVals[i];
+    result = ledCtrlInit();
+    zassert_equal(1, zephyrLedStripInit_fake.call_count,
+      "ledCtrlInit failed to initialize the LED strip.");
+    zassert_equal(&ledStrip, zephyrLedStripInit_fake.arg0_val,
+      "ledCtrlInit failed to initialize the right LED strip.");
+    zassert_equal(LED_STRIP_COLOR_RGB, zephyrLedStripInit_fake.arg1_val,
+      "ledCtrlInit failed to initialize the LED strip with the right color format.");
+    zassert_equal(pixelCounts[i], zephyrLedStripInit_fake.arg2_val,
+      "ledCtrlInit failed to initialize the LED strip with the right pixel count.");
+    zassert_equal(returnVals[i], result,
+      "ledCtrlInit failed to return the error code.");
+  }
 }
 
 /**
@@ -62,27 +80,424 @@ ZTEST(ledCtrl_suite, test_ledCtrlInit_Fail)
 */
 ZTEST(ledCtrl_suite, test_ledCtrlInit_Success)
 {
-  zassert_true(true);
-  // int returnVals[LED_CTRL_IS_DEV_READY_TEST_CNT] = {0, 0, 0};
-  // int pixelCounts[LED_CTRL_IS_DEV_READY_TEST_CNT] = {1, 24, 250};
-  // int result;
-  // for(uint8_t i = 0; i < LED_CTRL_IS_DEV_READY_TEST_CNT; ++i)
-  // {
-  //   ledStrip.pixelCount = pixelCounts[i];
-  //   RESET_FAKE(zephyrLedStripInit);
-  //   zephyrLedStripInit_fake.return_val = returnVals[i];
-  //   result = ledCtrlInit();
-  //   zassert_equal(zephyrLedStripInit_fake.call_count, 1,
-  //     "ledCtrlInit failed to initialize the LED strip");
-  //   zassert_equal(zephyrLedStripInit_fake.arg0_val, &ledStrip,
-  //     "ledCtrlInit failed to initialize the right LED strip");
-  //   zassert_equal(zephyrLedStripInit_fake.arg1_val, LED_STRIP_COLOR_RGB,
-  //     "ledCtrlInit failed to initialize the LED strip with the right color format");
-  //   zassert_equal(zephyrLedStripInit_fake.arg2_val, pixelCounts[i],
-  //     "ledCtrlInit failed to initialize the LED strip with the right pixel count");
-  //   zassert_equal(result, returnVals[i],
-  //     "ledCtrlInit failed to return the success code.");
-  // }
+  int returnVals[LED_CTRL_IS_DEV_READY_TEST_CNT] = {0, 0, 0};
+  int pixelCounts[LED_CTRL_IS_DEV_READY_TEST_CNT] = {1, 24, 250};
+  int result;
+  for(uint8_t i = 0; i < LED_CTRL_IS_DEV_READY_TEST_CNT; ++i)
+  {
+    ledStrip.pixelCount = pixelCounts[i];
+    RESET_FAKE(zephyrLedStripInit);
+    zephyrLedStripInit_fake.return_val = returnVals[i];
+    result = ledCtrlInit();
+    zassert_equal(1, zephyrLedStripInit_fake.call_count,
+      "ledCtrlInit failed to initialize the LED strip.");
+    zassert_equal(&ledStrip, zephyrLedStripInit_fake.arg0_val,
+      "ledCtrlInit failed to initialize the right LED strip.");
+    zassert_equal(LED_STRIP_COLOR_RGB, zephyrLedStripInit_fake.arg1_val,
+      "ledCtrlInit failed to initialize the LED strip with the right color format.");
+    zassert_equal(pixelCounts[i], zephyrLedStripInit_fake.arg2_val,
+      "ledCtrlInit failed to initialize the LED strip with the right pixel count.");
+    zassert_equal(returnVals[i], result,
+      "ledCtrlInit failed to return the success code.");
+  }
+}
+
+#define LED_CTRL_PIXEL_CNT_TEST_CNT     3
+/**
+ * @test  ledCtrlGetRpmChaserPxlCnt must return the number of pixel in the
+ *        RPM chaser.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlGetRpmChaserPxlCnt)
+{
+  uint32_t expectedPixelCnt[LED_CTRL_PIXEL_CNT_TEST_CNT] = { 1, 10, 500};
+
+  for(uint8_t i = 0; i < LED_CTRL_PIXEL_CNT_TEST_CNT; ++i)
+  {
+    zephyrLedStripGetPixelCnt_fake.return_val = expectedPixelCnt[i] + 2;
+    zassert_equal(expectedPixelCnt[i], ledCtrlGetRpmChaserPxlCnt(),
+      "ledCtrlGetRpmChaserPxlCnt failed to return the pixel count.");
+    zassert_equal(i + 1, zephyrLedStripGetPixelCnt_fake.call_count,
+      "ledCtrlGetRpmChaserPxlCnt get the pixel count from the full strip.");
+    zassert_equal(&ledStrip, zephyrLedStripGetPixelCnt_fake.arg0_val,
+      "ledCtrlGetRpmChaserPxlCnt get the pixel count from the full strip.");
+  }
+}
+
+/**
+ * @test  ledCtrlSetRightEncPixelDefaultMode must return the error code
+ *        if setting the right encoder pixel color fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRightEncPixelDefaultMode_SetColorFail)
+{
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetRightEncPixelDefaultMode(),
+    "ledCtrlSetRightEncPixelDefaultMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(0, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&encDefColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+}
+
+/**
+ * @test  ledCtrlSetRightEncPixelDefaultMode must return the error code
+ *        if updating the LED strip fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRightEncPixelDefaultMode_UpdateStripFail)
+{
+  int successRet = 0;
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetRightEncPixelDefaultMode(),
+    "ledCtrlSetRightEncPixelDefaultMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(0, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&encDefColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetRightEncPixelDefaultMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetRightEncPixelDefaultMode must set the right encoder
+ *        pixel to the default mode color, update the LED strip and
+ *        return the success code.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRightEncPixelDefaultMode_Success)
+{
+  int successRet = 0;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = successRet;
+
+  zassert_equal(successRet, ledCtrlSetRightEncPixelDefaultMode(),
+    "ledCtrlSetRightEncPixelDefaultMode failed to return the success code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(0, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&encDefColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetRightEncPixelDefaultMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetRightEncPixelDefaultMode failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetRightEncPixelSecondaryMode must return the error code
+ *        if setting the right encoder pixel color fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRightEncPixelSecondaryMode_SetColorFail)
+{
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetRightEncPixelSecondaryMode(),
+    "ledCtrlSetRightEncPixelSecondaryMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(0, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&encSecColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+}
+
+/**
+ * @test  ledCtrlSetRightEncPixelSecondaryMode must return the error code
+ *        if updating the LED strip fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRightEncPixelSecondaryMode_UpdateStripFail)
+{
+  int successRet = 0;
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetRightEncPixelSecondaryMode(),
+    "ledCtrlSetRightEncPixelSecondaryMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(0, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&encSecColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetRightEncPixelSecondaryMode failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelDefaultMode must return the error code
+ *        if setting the right encoder pixel color fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelDefaultMode_SetColorFail)
+{
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetLeftEncPixelDefaultMode(),
+    "ledCtrlSetLeftEncPixelDefaultMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&encDefColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelDefaultMode must return the error code
+ *        if updating the LED strip fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelDefaultMode_UpdateStripFail)
+{
+  int successRet = 0;
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetLeftEncPixelDefaultMode(),
+    "ledCtrlSetLeftEncPixelDefaultMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&encDefColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelDefaultMode must set the right encoder
+ *        pixel to the default mode color, update the LED strip and
+ *        return the success code.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelDefaultMode_Success)
+{
+  int successRet = 0;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = successRet;
+
+  zassert_equal(successRet, ledCtrlSetLeftEncPixelDefaultMode(),
+    "ledCtrlSetLeftEncPixelDefaultMode failed to return the success code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(&encDefColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelDefaultMode failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelSecondaryMode must return the error code
+ *        if setting the right encoder pixel color fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelSecondaryMode_SetColorFail)
+{
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetLeftEncPixelSecondaryMode(),
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&encSecColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelSecondaryMode must return the error code
+ *        if updating the LED strip fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelSecondaryMode_UpdateStripFail)
+{
+  int successRet = 0;
+  int failRet = -EDOM;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetLeftEncPixelSecondaryMode(),
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&encSecColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetLeftEncPixelSecondaryMode must set the right encoder
+ *        pixel to the default mode color, update the LED strip and
+ *        return the success code.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelSecondaryMode_Success)
+{
+  int successRet = 0;
+
+  zephyrLedStripSetGrbPixel_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = successRet;
+
+  zassert_equal(successRet, ledCtrlSetLeftEncPixelSecondaryMode(),
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to return the success code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.call_count,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixel_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripSetGrbPixel_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&encSecColor, zephyrLedStripSetGrbPixel_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to update the LED strip.");
+}
+
+#define RPM_CHASER_PIXEL_COUNT    5
+/**
+ * @test  ledCtrlSetRpmChaserPixels must return the error code if setting
+ *        the RPM chaser pixels color fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_SetPixelsFail)
+{
+  int failRet = -EDOM;
+  ZephyrGrbPixel pixels[RPM_CHASER_PIXEL_COUNT];
+
+  ledStrip.pixelCount = RPM_CHASER_PIXEL_COUNT;
+  zephyrLedStripSetGrbPixels_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetRpmChaserPixels(pixels),
+    "ledCtrlSetRpmChaserPixels failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixels_fake.call_count,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixels_fake.arg0_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(2, zephyrLedStripSetGrbPixels_fake.arg1_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(RPM_CHASER_PIXEL_COUNT,
+    zephyrLedStripSetGrbPixels_fake.arg2_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+  zassert_equal(pixels, zephyrLedStripSetGrbPixels_fake.arg3_val,
+    "ledCtrlSetLeftEncPixelSecondaryMode failed to set the pixel color.");
+}
+
+/**
+ * @test  ledCtrlSetRpmChaserPixels must return the error code if updating
+ *        the LED strip fails.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_UpdateFail)
+{
+  int successRet = 0;
+  int failRet = -EDOM;
+  ZephyrGrbPixel pixels[RPM_CHASER_PIXEL_COUNT];
+
+  ledStrip.pixelCount = RPM_CHASER_PIXEL_COUNT;
+  zephyrLedStripSetGrbPixels_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = failRet;
+
+  zassert_equal(failRet, ledCtrlSetRpmChaserPixels(pixels),
+    "ledCtrlSetRpmChaserPixels failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixels_fake.call_count,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixels_fake.arg0_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(2, zephyrLedStripSetGrbPixels_fake.arg1_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(RPM_CHASER_PIXEL_COUNT,
+    zephyrLedStripSetGrbPixels_fake.arg2_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(pixels, zephyrLedStripSetGrbPixels_fake.arg3_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetRpmChaserPixels failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetRpmChaserPixels failed to update the LED strip.");
+}
+
+/**
+ * @test  ledCtrlSetRpmChaserPixels must set the RPM chaser pixels color,
+ *        update the LED strip and return the success code.
+*/
+ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_Success)
+{
+  int successRet = 0;
+  ZephyrGrbPixel pixels[RPM_CHASER_PIXEL_COUNT];
+
+  ledStrip.pixelCount = RPM_CHASER_PIXEL_COUNT;
+  zephyrLedStripSetGrbPixels_fake.return_val = successRet;
+  zephyrLedStripUpdate_fake.return_val = successRet;
+
+  zassert_equal(successRet, ledCtrlSetRpmChaserPixels(pixels),
+    "ledCtrlSetRpmChaserPixels failed to return the error code.");
+  zassert_equal(1, zephyrLedStripSetGrbPixels_fake.call_count,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(&ledStrip, zephyrLedStripSetGrbPixels_fake.arg0_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(2, zephyrLedStripSetGrbPixels_fake.arg1_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(RPM_CHASER_PIXEL_COUNT,
+    zephyrLedStripSetGrbPixels_fake.arg2_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(pixels, zephyrLedStripSetGrbPixels_fake.arg3_val,
+    "ledCtrlSetRpmChaserPixels failed to set the pixel color.");
+  zassert_equal(1, zephyrLedStripUpdate_fake.call_count,
+    "ledCtrlSetRpmChaserPixels failed to update the LED strip.");
+  zassert_equal(&ledStrip, zephyrLedStripUpdate_fake.arg0_val,
+    "ledCtrlSetRpmChaserPixels failed to update the LED strip.");
 }
 
 /** @} */

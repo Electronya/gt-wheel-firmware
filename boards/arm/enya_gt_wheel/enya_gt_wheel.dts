@@ -58,6 +58,10 @@
 			gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
 			label = "Button Col6";
 		};
+    stripdataline: dataline {
+      gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
+			label = "ALIVE LED";
+    };
 	};
 
 	gpio_keys {
@@ -111,12 +115,20 @@
 			gpios = <&gpioa 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row11";
 		};
-    shifter_down: shifter_down {
-			gpios = <&gpioa 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    shifter_left: left_shifter {
+			gpios = <&gpioa 2 (GPIO_ACTIVE_LOW)>;
       label = "Button Row11";
 		};
-    shifter_up: shifter_up {
-			gpios = <&gpioa 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    shifter_right: right_shifter {
+			gpios = <&gpioa 3 (GPIO_ACTIVE_LOW)>;
+      label = "Button Row11";
+		};
+    rocker_left: left_rocker {
+			gpios = <&gpioc 14 (GPIO_ACTIVE_LOW)>;
+      label = "Button Row11";
+		};
+    rocker_right: right_rocker {
+			gpios = <&gpioc 13 (GPIO_ACTIVE_LOW)>;
       label = "Button Row11";
 		};
 	};
@@ -146,10 +158,14 @@
     row10 = &btn_row10;
     row11 = &btn_row11;
     /* shifter */
-    shifterdown = &shifter_down;
-    shifterup = &shifter_up;
+    shifterleft = &shifter_left;
+    shifterright = &shifter_right;
+    /* rocker */
+    rockerleft = &rocker_left;
+    rockerright = &rocker_right;
     /* led strip */
-    ledstrip = &led_strip;
+    stripcounter = &stripcounter;
+    stripdataline = &stripdataline;
     /* adc */
     adc = &adc1;
     /* usb */
@@ -197,6 +213,7 @@
 	status = "okay";
   led_strip: ws2812@0 {
 		compatible = "worldsemi,ws2812-spi";
+    status = "okay";
 		/* SPI */
 		reg = <0>; /* ignored, but necessary for SPI bindings */
 		spi-max-frequency = <SPI_FREQ>;
@@ -207,6 +224,7 @@
                      LED_COLOR_ID_BLUE>;
 		spi-one-frame = <ONE_FRAME>;
 		spi-zero-frame = <ZERO_FRAME>;
+    reset-delay = <60>;
 	};
 };
 
@@ -225,4 +243,16 @@
 &iwdg {
   // TODO: enable at the end of dev.
 	status = "disabled";
+};
+
+&timers6 {
+  /* Timer freq: ~6000000Hz */
+  st,prescaler = <8>; // TODO: remove when working from real hardware.
+	// st,prescaler = <6>;
+	status = "okay";
+  stripcounter: counter {
+		compatible = "st,stm32-counter";
+		status = "okay";
+		label = "LED strip counter";
+	};
 };
