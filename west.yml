@@ -20,4 +20,4 @@ manifest:
       remote: electronya
       repo-path: zephyr-wrapper.git
       path: modules/lib/electronya/zephyr-wrapper
-      revision: adding-led-strip
+      revision: adding-thread
