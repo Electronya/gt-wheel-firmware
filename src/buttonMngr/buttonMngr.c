@@ -20,11 +20,22 @@
 #include "buttonMngr.h"
 #include "zephyrCommon.h"
 #include "zephyrGpio.h"
+#include "zephyrThread.h"
 
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /* Setting module logging */
 LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
+
+/**
+ * @brief The thread stack size.
+*/
+#define BUTTON_MNGR_STACK_SIZE      256
+
+/**
+ * @brief The thread name.
+ */
+#define BUTTON_MNGR_THREAD_NAME     "buttonMngr"
 
 #ifndef CONFIG_ZTEST
 ZephyrGpio rows[BUTTON_ROW_COUNT] = {
@@ -67,6 +78,14 @@ ZephyrGpio columns[BUTTON_COL_COUNT];
 ZephyrGpio shifters[BUTTON_SHIFTER_COUNT];
 ZephyrGpio rockers[BUTTON_ROCKER_COUNT];
 #endif
+
+K_THREAD_STACK_DEFINE(buttonThreadStack, BUTTON_MNGR_STACK_SIZE);
+static ZephyrThread thread = {
+  .stack = buttonThreadStack,
+  .stackSize = BUTTON_MNGR_STACK_SIZE,
+  .priority = 2,
+  .options = 0,
+};
 
 /**
  * @brief The button states.
@@ -151,6 +170,35 @@ static int readButtonRockers(void)
    return rc;
 }
 
+/**
+ * @brief   The button manager thread implementation.
+ *
+ * @param p1  The first parameter.
+ * @param p2  The second parameter.
+ * @param p3  The third parameter.
+ */
+static void buttonMngrThread(void *p1, void *p2, void *p3)
+{
+  int rc;
+
+  for(;;)
+  {
+    rc = readButtonMatrix();
+    if(rc < 0)
+      LOG_ERR("unable to read button matrix");
+
+    rc = readButtonShifters();
+    if(rc < 0)
+      LOG_ERR("unable to read shifters");
+
+    rc = readButtonRockers();
+    if(rc < 0)
+      LOG_ERR("unable to read rockers");
+
+    zephyrThreadSleepMs(100);
+  }
+}
+
 int buttonMngrInit(void)
 {
   int rc = 0;
@@ -166,6 +214,16 @@ int buttonMngrInit(void)
 
   for(uint8_t i = 0; i < BUTTON_ROCKER_COUNT && rc == 0; ++i)
     rc = zephyrGpioInit(rockers + i, GPIO_IN);
+
+  if(rc == 0)
+  {
+    thread.entry = buttonMngrThread;
+    thread.p1 = NULL;
+    thread.p2 = NULL;
+    thread.p3 = NULL;
+    zephyrThreadCreate(&thread, BUTTON_MNGR_THREAD_NAME,
+      ZEPHYR_TIME_NO_WAIT, MILLI_SEC);
+  }
 
   return rc;
 }

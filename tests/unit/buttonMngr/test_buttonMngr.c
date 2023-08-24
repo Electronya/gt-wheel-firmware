@@ -24,6 +24,7 @@
 #include "buttonMngr.c"
 
 #include "zephyrGpio.h"
+#include "zephyrThread.h"
 
 DEFINE_FFF_GLOBALS;
 
@@ -32,6 +33,9 @@ FAKE_VALUE_FUNC(int, zephyrGpioInit, ZephyrGpio*, ZephyrGpioDir);
 FAKE_VALUE_FUNC(int, zephyrGpioSet, ZephyrGpio*);
 FAKE_VALUE_FUNC(int, zephyrGpioClear, ZephyrGpio*);
 FAKE_VALUE_FUNC(int, zephyrGpioRead, ZephyrGpio*);
+FAKE_VALUE_FUNC(uint32_t, zephyrThreadSleepMs, uint32_t);
+FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread*, char*, uint32_t,
+               ZephyrTimeUnit);
 
 /**
  * @brief The total of row and column GPIOs.
@@ -113,6 +117,8 @@ static void buttonMngrCaseSetup(void *f)
   RESET_FAKE(zephyrGpioSet);
   RESET_FAKE(zephyrGpioClear);
   RESET_FAKE(zephyrGpioRead);
+  RESET_FAKE(zephyrThreadSleepMs);
+  RESET_FAKE(zephyrThreadCreate);
 }
 
 ZTEST_SUITE(buttonMngr_suite, NULL, buttonMngrSuiteSetup, buttonMngrCaseSetup,
@@ -342,6 +348,7 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrInit_RowInitFail)
       zassert_equal(rows + j, zephyrGpioInit_fake.arg0_history[j]);
       zassert_equal(GPIO_IN, zephyrGpioInit_fake.arg1_history[j]);
     }
+    zassert_equal(0, zephyrThreadCreate_fake.call_count);
     RESET_FAKE(zephyrGpioInit);
   }
 }
@@ -373,6 +380,7 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrInit_ColInitFail)
       zassert_equal(GPIO_OUT_CLR,
         zephyrGpioInit_fake.arg1_history[BUTTON_ROW_COUNT + j]);
     }
+    zassert_equal(0, zephyrThreadCreate_fake.call_count);
     RESET_FAKE(zephyrGpioInit);
   }
 }
@@ -404,6 +412,8 @@ ZTEST_F(buttonMngr_suite, test_ButtonMngrInit_ShifterFail)
       zassert_equal(GPIO_IN,
         zephyrGpioInit_fake.arg1_history[TOTAL_ROW_COL_COUNT + j]);
     }
+    zassert_equal(0, zephyrThreadCreate_fake.call_count);
+    RESET_FAKE(zephyrGpioInit);
   }
 }
 
@@ -435,12 +445,14 @@ ZTEST_F(buttonMngr_suite, test_ButtonMngrInit_RockerFail)
       zassert_equal(GPIO_IN,
         zephyrGpioInit_fake.arg1_history[rockerOffset + j]);
     }
+    zassert_equal(0, zephyrThreadCreate_fake.call_count);
+    RESET_FAKE(zephyrGpioInit);
   }
 }
 
 /**
  * @test  buttonMngrInit must return the success code when the initialization
- *        succeeds.
+ *        succeeds and create the thread.
 */
 ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
 {
@@ -477,6 +489,12 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
     zassert_equal(expectedGpio, zephyrGpioInit_fake.arg0_history[i]);
     zassert_equal(expectedDir, zephyrGpioInit_fake.arg1_history[i]);
   }
+  printk("call count: %d\n", zephyrThreadCreate_fake.call_count);
+  zassert_equal(1, zephyrThreadCreate_fake.call_count);
+  zassert_equal(&thread, zephyrThreadCreate_fake.arg0_val);
+  zassert_equal(BUTTON_MNGR_THREAD_NAME, zephyrThreadCreate_fake.arg1_val);
+  zassert_equal(ZEPHYR_TIME_NO_WAIT, zephyrThreadCreate_fake.arg2_val);
+  zassert_equal(MILLI_SEC, zephyrThreadCreate_fake.arg3_val);
 }
 
 #define GET_STATE_FAIL_TEST_CNT     2
