@@ -17,6 +17,8 @@
 
 #include "simhubPkt.h"
 
+#include <stdlib.h>
+
 /**
  * @brief ACM device module name.
 */
@@ -45,7 +47,12 @@ size_t simhubPktGetBufferSize(SimhubPktBuffer *pktBuf)
 
 size_t simhubPktGetBufferFreeSpace(SimhubPktBuffer *pktBuf)
 {
-  return pktBuf->size - (pktBuf->head + pktBuf->tail);
+  return pktBuf->size - abs(pktBuf->head - pktBuf->tail);
+}
+
+size_t simhubPktGetBufferUsedSpace(SimhubPktBuffer *pktBuf)
+{
+  return abs(pktBuf->head - pktBuf->tail);
 }
 
 /** @} */

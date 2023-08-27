@@ -72,6 +72,15 @@ size_t simhubPktGetBufferSize(SimhubPktBuffer *pktBuf);
  */
 size_t simhubPktGetBufferFreeSpace(SimhubPktBuffer *pktBuf);
 
+/**
+ * @brief   Get the used space in a packet buffer.
+ *
+ * @param pktBuf  The packet buffer.
+ *
+ * @return  The number of used bytes in the packet buffer.
+ */
+size_t simhubPktGetBufferUsedSpace(SimhubPktBuffer *pktBuf);
+
 #endif    /* SIMHUB_PACKET */
 
 /** @} */
