@@ -35,8 +35,8 @@ DEFINE_FFF_GLOBALS;
 */
 struct simhubPkt_suite_fixture
 {
-  uint8_t testBuffer[TEST_BUFFER_SIZE];
-  SimhubPktBuffer testPktBuf;
+  uint8_t buffer[TEST_BUFFER_SIZE];
+  SimhubPktBuffer pktBuf;
 };
 
 static void *simhubPktSuiteSetup(void)
@@ -58,10 +58,10 @@ static void simhubPktCaseSetup(void *f)
   struct simhubPkt_suite_fixture *fixture =
     (struct simhubPkt_suite_fixture *)f;
 
-  fixture->testPktBuf.buffer = fixture->testBuffer;
-  fixture->testPktBuf.size = TEST_BUFFER_SIZE;
-  fixture->testPktBuf.head = 0;
-  fixture->testPktBuf.tail = 0;
+  fixture->pktBuf.buffer = fixture->buffer;
+  fixture->pktBuf.size = TEST_BUFFER_SIZE;
+  fixture->pktBuf.head = 0;
+  fixture->pktBuf.tail = 0;
 }
 
 ZTEST_SUITE(simhubPkt_suite, NULL, simhubPktSuiteSetup, simhubPktCaseSetup,
@@ -89,7 +89,27 @@ ZTEST(simhubPkt_suite, test_simhubPktInitBuffer_InitHeadAndTail)
   zassert_equal(0, testBuffer.tail);
 }
 
-#define GET_FREE_SPACE_TEST_CNT     3
+#define PKT_BUF_EMPTY_TEST_COUNT    4
+/**
+ * @test  simhubPktIsBufferEmpty must return true if the provided packet
+ *        buffer is empty and false otherwise.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktIsBufferEmpty_ReturnVal)
+{
+  uint32_t heads[PKT_BUF_EMPTY_TEST_COUNT] = {0, 10, 69, TEST_BUFFER_SIZE};
+  uint32_t tails[PKT_BUF_EMPTY_TEST_COUNT] = {0, TEST_BUFFER_SIZE, 69, 2};
+
+  for(uint8_t i = 0; i < PKT_BUF_EMPTY_TEST_COUNT; ++i)
+  {
+    fixture->pktBuf.head = heads[i];
+    fixture->pktBuf.tail = tails[i];
+
+    if(i % 2 == 0)
+      zassert_true(simhubPktIsBufferEmpty(&fixture->pktBuf));
+    else
+      zassert_false(simhubPktIsBufferEmpty(&fixture->pktBuf));
+  }
+}
 /**
  * @test  simhubPktGetBufferFreeSpace must return the number of free bytes
  *        in the packet buffer.

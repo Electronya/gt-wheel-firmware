@@ -32,6 +32,12 @@ void simhubPktInitBuffer(SimhubPktBuffer *pktBuf, uint8_t *buffer, size_t size)
   pktBuf->head = 0;
   pktBuf->tail = 0;
 }
+
+bool simhubPktIsBufferEmpty(SimhubPktBuffer *pktBuf)
+{
+  return pktBuf->head == pktBuf->tail;
+}
+
 {
   pktBuf->head = pktBuf->buffer;
   pktBuf->tail = pktBuf->buffer;

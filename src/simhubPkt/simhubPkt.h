@@ -46,13 +46,23 @@ typedef struct
 void simhubPktInitBuffer(SimhubPktBuffer *pktBuf, uint8_t *buffer, size_t size);
 
 /**
+ * @brief   Check if a packet buffer is empty.
+ *
+ * @param pktBuf  The packet buffer.
+ *
+ * @return  True if the packet buffer is empty, false otherwise.
+ */
+bool simhubPktIsBufferEmpty(SimhubPktBuffer *pktBuf);
+
+
+/**
  * @brief   Get the free space in a packet buffer.
  *
  * @param pktBuf  The packet buffer.
  *
  * @return  The number of free bytes in the packet buffer.
  */
-void simhubPktInitBuffer(SimhubPktBuffer *pktBuf);
+size_t simhubPktGetBufferFreeSpace(SimhubPktBuffer *pktBuf);
 
 #endif    /* SIMHUB_PACKET */
 
