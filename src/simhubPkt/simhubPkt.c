@@ -17,4 +17,18 @@
 
 #include "simhubPkt.h"
 
+/**
+ * @brief ACM device module name.
+*/
+#define SIMHUB_PKT_MODULE_NAME  simhub_packet_module
+
+/* Setting module logging */
+LOG_MODULE_DECLARE(SIMHUB_PKT_MODULE_NAME);
+
+void simhubPktInitBuffer(SimhubPktBuffer *pktBuf)
+{
+  pktBuf->head = pktBuf->buffer;
+  pktBuf->tail = pktBuf->buffer;
+}
+
 /** @} */
