@@ -28,14 +28,15 @@ DEFINE_FFF_GLOBALS;
 /**
  * @brief The test buffer size.
 */
-#define TEST_BUFFER_SIZE          8
+#define TEST_BUFFER_SIZE          128
 
 /**
  * @brief The test fixture.
 */
 struct simhubPkt_suite_fixture
 {
-
+  uint8_t testBuffer[TEST_BUFFER_SIZE];
+  SimhubPktBuffer testPktBuf;
 };
 
 static void *simhubPktSuiteSetup(void)
@@ -54,9 +55,13 @@ static void simhubPktSuiteTeardown(void *f)
 
 static void simhubPktCaseSetup(void *f)
 {
-  // int successRet = 0;
-  // struct simhubPkt_suite_fixture *fixture =
-  //   (struct simhubPkt_suite_fixture *)f;
+  struct simhubPkt_suite_fixture *fixture =
+    (struct simhubPkt_suite_fixture *)f;
+
+  fixture->testPktBuf.buffer = fixture->testBuffer;
+  fixture->testPktBuf.size = TEST_BUFFER_SIZE;
+  fixture->testPktBuf.head = fixture->testBuffer;
+  fixture->testPktBuf.tail = fixture->testBuffer;
 }
 
 ZTEST_SUITE(simhubPkt_suite, NULL, simhubPktSuiteSetup, simhubPktCaseSetup,
@@ -65,20 +70,15 @@ ZTEST_SUITE(simhubPkt_suite, NULL, simhubPktSuiteSetup, simhubPktCaseSetup,
 /**
  * @test  simhubPktInitBuffer must initialize the buffer head and tail.
 */
-ZTEST(simhubPkt_suite, test_simhubPktInitBuffer_InitHeadAndTail)
+ZTEST_F(simhubPkt_suite, test_simhubPktInitBuffer_InitHeadAndTail)
 {
-  uint8_t buffer[TEST_BUFFER_SIZE];
-  SimhubPktBuffer buf = {
-    .size = TEST_BUFFER_SIZE,
-    .head = NULL,
-    .tail = NULL,
-    .buffer = buffer,
-  };
+  fixture->testPktBuf.head = NULL;
+  fixture->testPktBuf.tail = NULL;
 
-  simhubPktInitBuffer(&buf);
+  simhubPktInitBuffer(&fixture->testPktBuf);
 
-  zassert_equal(buffer, buf.head);
-  zassert_equal(buffer, buf.tail);
+  zassert_equal(fixture->testBuffer, fixture->testPktBuf.head);
+  zassert_equal(fixture->testBuffer, fixture->testPktBuf.tail);
 }
 
 /** @} */
