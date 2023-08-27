@@ -60,25 +60,60 @@ static void simhubPktCaseSetup(void *f)
 
   fixture->testPktBuf.buffer = fixture->testBuffer;
   fixture->testPktBuf.size = TEST_BUFFER_SIZE;
-  fixture->testPktBuf.head = fixture->testBuffer;
-  fixture->testPktBuf.tail = fixture->testBuffer;
+  fixture->testPktBuf.head = 0;
+  fixture->testPktBuf.tail = 0;
 }
 
 ZTEST_SUITE(simhubPkt_suite, NULL, simhubPktSuiteSetup, simhubPktCaseSetup,
   NULL, simhubPktSuiteTeardown);
 
+#define INIT_PKT_BUFFER_SIZE    8
 /**
- * @test  simhubPktInitBuffer must initialize the buffer head and tail.
+ * @test  simhubPktInitBuffer must initialize the packet buffer as empty.
 */
-ZTEST_F(simhubPkt_suite, test_simhubPktInitBuffer_InitHeadAndTail)
+ZTEST(simhubPkt_suite, test_simhubPktInitBuffer_InitHeadAndTail)
 {
-  fixture->testPktBuf.head = NULL;
-  fixture->testPktBuf.tail = NULL;
+  uint8_t buffer[INIT_PKT_BUFFER_SIZE];
+  SimhubPktBuffer testBuffer = {
+    .buffer = NULL,
+    .size = 0,
+    .head = 100,
+    .tail = 50,
+  };
 
-  simhubPktInitBuffer(&fixture->testPktBuf);
+  simhubPktInitBuffer(&testBuffer, buffer, INIT_PKT_BUFFER_SIZE);
 
-  zassert_equal(fixture->testBuffer, fixture->testPktBuf.head);
-  zassert_equal(fixture->testBuffer, fixture->testPktBuf.tail);
+  zassert_equal(buffer, testBuffer.buffer);
+  zassert_equal(INIT_PKT_BUFFER_SIZE, testBuffer.size);
+  zassert_equal(0, testBuffer.head);
+  zassert_equal(0, testBuffer.tail);
+}
+
+#define GET_FREE_SPACE_TEST_CNT     3
+/**
+ * @test  simhubPktGetBufferFreeSpace must return the number of free bytes
+ *        in the packet buffer.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktGetBufferFreeSpace_ReturnFreeSpace)
+{
+  // uint8_t *heads[GET_FREE_SPACE_TEST_CNT] =
+  //   {fixture->testBuffer,
+  //    fixture->testBuffer + TEST_BUFFER_SIZE - TEST_BUFFER_SIZE / 4,
+  //    fixture->testBuffer + TEST_BUFFER_SIZE / 2};
+  // uint8_t *tails[GET_FREE_SPACE_TEST_CNT] =
+  //   {fixture->testBuffer + TEST_BUFFER_SIZE,
+  //    fixture->testBuffer + TEST_BUFFER_SIZE / 4,
+  //    fixture->testBuffer + TEST_BUFFER_SIZE / 2};
+  // size_t expectedFreeSpaces[GET_FREE_SPACE_TEST_CNT] = {0, 64, 128};
+
+  // for(uint8_t i = 0; i < GET_FREE_SPACE_TEST_CNT; ++i)
+  // {
+  //   fixture->testPktBuf.head = heads[i];
+  //   fixture->testPktBuf.tail = tails[i];
+
+  //   zassert_equal(expectedFreeSpaces[i],
+  //     simhubPktGetBufferFreeSpace(&fixture->testPktBuf));
+  // }
 }
 
 /** @} */

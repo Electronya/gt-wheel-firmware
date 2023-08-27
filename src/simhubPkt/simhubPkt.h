@@ -31,15 +31,26 @@
 typedef struct
 {
   size_t size;                  /**< The buffer size. */
-  uint8_t *head;                /**< The buffer head. */
-  uint8_t *tail;                /**< The buffer tail. */
+  uint32_t head;                /**< The buffer head. */
+  uint32_t tail;                /**< The buffer tail. */
   uint8_t *buffer;              /**< The actual buffer. */
 } SimhubPktBuffer;
 
 /**
  * @brief   Initialize a SIMHUB packet buffer.
  *
- * @param buffer  The packet buffer to initialize.
+ * @param pktBuf  The packet buffer to initialize.
+ * @param buffer  The byte buffer.
+ * @param size    The size of the byte buffer.
+ */
+void simhubPktInitBuffer(SimhubPktBuffer *pktBuf, uint8_t *buffer, size_t size);
+
+/**
+ * @brief   Get the free space in a packet buffer.
+ *
+ * @param pktBuf  The packet buffer.
+ *
+ * @return  The number of free bytes in the packet buffer.
  */
 void simhubPktInitBuffer(SimhubPktBuffer *pktBuf);
 
