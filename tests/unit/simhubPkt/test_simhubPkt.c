@@ -110,6 +110,23 @@ ZTEST_F(simhubPkt_suite, test_simhubPktIsBufferEmpty_ReturnVal)
       zassert_false(simhubPktIsBufferEmpty(&fixture->pktBuf));
   }
 }
+
+#define PKT_BUF_SIZE_TEST_COUNT     3
+/**
+ * @test  simhubPktGetBufferSize must return the packet buffer size.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktGetBufferSize_ReturnSize)
+{
+  size_t expectedSizes[PKT_BUF_SIZE_TEST_COUNT] = {1, 5, TEST_BUFFER_SIZE};
+
+  for(uint8_t i = 0; i < PKT_BUF_SIZE_TEST_COUNT; ++i)
+  {
+    fixture->pktBuf.size = expectedSizes[i];
+
+    zassert_equal(expectedSizes[i], simhubPktGetBufferSize(&fixture->pktBuf));
+  }
+}
+
 /**
  * @test  simhubPktGetBufferFreeSpace must return the number of free bytes
  *        in the packet buffer.

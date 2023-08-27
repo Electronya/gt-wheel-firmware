@@ -54,6 +54,14 @@ void simhubPktInitBuffer(SimhubPktBuffer *pktBuf, uint8_t *buffer, size_t size);
  */
 bool simhubPktIsBufferEmpty(SimhubPktBuffer *pktBuf);
 
+/**
+ * @brief   Get the size of a packet buffer.
+ *
+ * @param pktBuf  The packet buffer.
+ *
+ * @return  The total size of the packet buffer.
+ */
+size_t simhubPktGetBufferSize(SimhubPktBuffer *pktBuf);
 
 /**
  * @brief   Get the free space in a packet buffer.

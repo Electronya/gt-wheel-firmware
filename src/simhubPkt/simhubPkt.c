@@ -38,9 +38,14 @@ bool simhubPktIsBufferEmpty(SimhubPktBuffer *pktBuf)
   return pktBuf->head == pktBuf->tail;
 }
 
+size_t simhubPktGetBufferSize(SimhubPktBuffer *pktBuf)
 {
-  pktBuf->head = pktBuf->buffer;
-  pktBuf->tail = pktBuf->buffer;
+  return pktBuf->size;
+}
+
+size_t simhubPktGetBufferFreeSpace(SimhubPktBuffer *pktBuf)
+{
+  return pktBuf->size - (pktBuf->head + pktBuf->tail);
 }
 
 /** @} */
