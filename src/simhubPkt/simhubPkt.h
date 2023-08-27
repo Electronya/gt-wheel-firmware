@@ -28,6 +28,9 @@
 */
 #define SIMHUB_TX_PKT_BUF_SIZE        24
 
+/**
+ * @brief The SIMHUB packet buffer.
+*/
 typedef struct
 {
   size_t size;                  /**< The buffer size. */
