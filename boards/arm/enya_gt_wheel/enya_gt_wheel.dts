@@ -66,7 +66,6 @@
 
 	gpio_keys {
 		compatible = "gpio-keys";
-    /* following are merely inputs */
 		btn_row0: btn_row0 {
 			gpios = <&gpioa 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row0";
@@ -238,6 +237,9 @@
   status = "okay";
   pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
 	pinctrl-names = "default";
+  cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
 };
 
 &iwdg {
