@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2023 by Electronya
  *
- * @file      buttonMngr.h
+ * @file      buttonMngr.c
  * @author    jbacon
  * @date      2023-07-31
  * @brief     Button Manager Module
