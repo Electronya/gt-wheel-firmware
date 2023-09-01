@@ -20,11 +20,16 @@
 
 #include "simhubPkt.h"
 #include "simhubPkt.c"
+
+#include "ledCtrl.h"
 #include "zephyrRingBuffer.h"
 
 DEFINE_FFF_GLOBALS;
 
 /* mocks */
+FAKE_VOID_FUNC(zephyrRingBufInit, ZephyrRingBuffer*, size_t, uint8_t*);
+
+FAKE_VALUE_FUNC(uint32_t, ledCtrlGetRpmChaserPxlCnt);
 
 /**
  * @brief The test buffer size.
@@ -32,12 +37,21 @@ DEFINE_FFF_GLOBALS;
 #define TEST_BUFFER_SIZE          128
 
 /**
+ * @brief The test LED pixel count.
+*/
+#define TEST_LED_PIXEL_COUNT      8
+
+/**
+ * @brief The LED data payload size.
+*/
+#define TEST_LED_DATA_PLD_SIZE    (TEST_LED_PIXEL_COUNT * 3)
+
+/**
  * @brief The test fixture.
 */
 struct simhubPkt_suite_fixture
 {
   uint8_t buffer[TEST_BUFFER_SIZE];
-  SimhubPktBuffer pktBuf;
 };
 
 static void *simhubPktSuiteSetup(void)
@@ -59,120 +73,301 @@ static void simhubPktCaseSetup(void *f)
   struct simhubPkt_suite_fixture *fixture =
     (struct simhubPkt_suite_fixture *)f;
 
-  fixture->pktBuf.buffer = fixture->buffer;
-  fixture->pktBuf.size = TEST_BUFFER_SIZE;
-  fixture->pktBuf.head = 0;
-  fixture->pktBuf.tail = 0;
+  for(uint8_t i = 0; i < TEST_BUFFER_SIZE; ++i)
+    fixture->buffer[i] = 0;
+
+  RESET_FAKE(zephyrRingBufInit);
+  RESET_FAKE(ledCtrlGetRpmChaserPxlCnt);
 }
 
 ZTEST_SUITE(simhubPkt_suite, NULL, simhubPktSuiteSetup, simhubPktCaseSetup,
   NULL, simhubPktSuiteTeardown);
 
-#define INIT_PKT_BUFFER_SIZE    8
+typedef size_t (*SetupPktFunction)(uint8_t *);
+
 /**
- * @test  simhubPktInitBuffer must initialize the packet buffer as empty.
-*/
-ZTEST(simhubPkt_suite, test_simhubPktInitBuffer_InitHeadAndTail)
+ * @brief   Setup an incomplete unlock upload packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupIncompleteUnlockPkt(uint8_t *pktBuf)
 {
-  uint8_t buffer[INIT_PKT_BUFFER_SIZE];
-  SimhubPktBuffer testBuffer = {
-    .buffer = NULL,
-    .size = 0,
-    .head = 100,
-    .tail = 50,
-  };
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint32_t head = 0;
 
-  simhubPktInitBuffer(&testBuffer, buffer, INIT_PKT_BUFFER_SIZE);
-
-  zassert_equal(buffer, testBuffer.buffer);
-  zassert_equal(INIT_PKT_BUFFER_SIZE, testBuffer.size);
-  zassert_equal(0, testBuffer.head);
-  zassert_equal(0, testBuffer.tail);
-}
-
-#define PKT_BUF_EMPTY_TEST_COUNT    4
-/**
- * @test  simhubPktIsBufferEmpty must return true if the provided packet
- *        buffer is empty and false otherwise.
-*/
-ZTEST_F(simhubPkt_suite, test_simhubPktIsBufferEmpty_ReturnVal)
-{
-  uint32_t heads[PKT_BUF_EMPTY_TEST_COUNT] = {0, 10, 69, TEST_BUFFER_SIZE};
-  uint32_t tails[PKT_BUF_EMPTY_TEST_COUNT] = {0, TEST_BUFFER_SIZE, 69, 2};
-
-  for(uint8_t i = 0; i < PKT_BUF_EMPTY_TEST_COUNT; ++i)
+  while(head < pktSize - 1)
   {
-    fixture->pktBuf.head = heads[i];
-    fixture->pktBuf.tail = tails[i];
-
-    if(i % 2 == 0)
-      zassert_true(simhubPktIsBufferEmpty(&fixture->pktBuf));
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
     else
-      zassert_false(simhubPktIsBufferEmpty(&fixture->pktBuf));
+      pktBuf[head] = unlockPld[head - SIMHUB_PKT_HEADER_SIZE];
+    ++head;
   }
-}
 
-#define PKT_BUF_SIZE_TEST_COUNT     3
-/**
- * @test  simhubPktGetBufferSize must return the packet buffer size.
-*/
-ZTEST_F(simhubPkt_suite, test_simhubPktGetBufferSize_ReturnSize)
-{
-  size_t expectedSizes[PKT_BUF_SIZE_TEST_COUNT] = {1, 5, TEST_BUFFER_SIZE};
-
-  for(uint8_t i = 0; i < PKT_BUF_SIZE_TEST_COUNT; ++i)
-  {
-    fixture->pktBuf.size = expectedSizes[i];
-
-    zassert_equal(expectedSizes[i], simhubPktGetBufferSize(&fixture->pktBuf));
-  }
+  return pktSize;
 }
 
 /**
- * @test  simhubPktGetBufferFreeSpace must return the number of free bytes
- *        in the packet buffer.
-*/
-ZTEST_F(simhubPkt_suite, test_simhubPktGetBufferFreeSpace_ReturnFreeSpace)
+ * @brief   Setup a complete unlock upload packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupCompleteUnlockPkt(uint8_t *pktBuf)
 {
-  size_t result;
-  uint32_t heads[PKT_BUF_SIZE_TEST_COUNT] =
-    {0, TEST_BUFFER_SIZE - TEST_BUFFER_SIZE / 4, TEST_BUFFER_SIZE / 2};
-  uint32_t tails[PKT_BUF_SIZE_TEST_COUNT] =
-    {TEST_BUFFER_SIZE, TEST_BUFFER_SIZE / 4, TEST_BUFFER_SIZE / 2};
-  size_t expectedFreeSpaces[PKT_BUF_SIZE_TEST_COUNT] = {0, 64, 128};
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint32_t head = 0;
 
-  for(uint8_t i = 0; i < PKT_BUF_SIZE_TEST_COUNT; ++i)
+  while(head < pktSize)
   {
-    fixture->pktBuf.head = heads[i];
-    fixture->pktBuf.tail = tails[i];
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else
+      pktBuf[head] = unlockPld[head - SIMHUB_PKT_HEADER_SIZE];
+    ++head;
+  }
 
-    result = simhubPktGetBufferFreeSpace(&fixture->pktBuf);
+  return pktSize;
+}
 
-    zassert_equal(expectedFreeSpaces[i], result);
+/**
+ * @brief   Setup an incomplete protocol version packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupIncompleteProtocolPkt(uint8_t *pktBuf)
+{
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint32_t head = 0;
+
+  while(head < pktSize - 1)
+  {
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else
+      pktBuf[head] = protoPld[head - SIMHUB_PKT_HEADER_SIZE];
+    ++head;
+  }
+
+  return pktSize;
+}
+
+/**
+ * @brief   Setup a complete protocol version packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupCompleteProtocolPkt(uint8_t *pktBuf)
+{
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint32_t head = 0;
+
+  while(head < pktSize)
+  {
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else
+      pktBuf[head] = protoPld[head - SIMHUB_PKT_HEADER_SIZE];
+    ++head;
+  }
+
+  return pktSize;
+}
+
+/**
+ * @brief   Setup an incomplete led count packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupIncompleteLedCountPkt(uint8_t *pktBuf)
+{
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint32_t head = 0;
+
+  while(head < pktSize - 1)
+  {
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else
+      pktBuf[head] = ledCntPld[head - SIMHUB_PKT_HEADER_SIZE];
+    ++head;
+  }
+
+  return pktSize;
+}
+
+/**
+ * @brief   Setup a complete led count packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupCompleteLedCountPkt(uint8_t *pktBuf)
+{
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint32_t head = 0;
+
+  while(head < pktSize)
+  {
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else
+      pktBuf[head] = ledCntPld[head - SIMHUB_PKT_HEADER_SIZE];
+    ++head;
+  }
+
+  return pktSize;
+}
+
+/**
+ * @brief   Setup an incomplete led Data packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupIncompleteLedDataPkt(uint8_t *pktBuf)
+{
+  uint8_t footerStart = SIMHUB_PKT_HEADER_SIZE + TEST_LED_DATA_PLD_SIZE;
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + TEST_LED_DATA_PLD_SIZE +
+    SIMHUB_LED_DATA_FOOTER_SIZE - 1;
+  uint32_t head = 0;
+
+  while(head < pktSize - 1)
+  {
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else if(head < footerStart)
+      pktBuf[head] = head;
+    else
+      pktBuf[head] = ledDataFooter[head - footerStart];
+    ++head;
+  }
+
+  return pktSize;
+}
+
+/**
+ * @brief   Setup a complete led Data packet.
+ *
+ * @param pktBuf  The packet buffer to setup.
+ */
+static size_t setupCompleteLedDataPkt(uint8_t *pktBuf)
+{
+  uint8_t footerStart = SIMHUB_PKT_HEADER_SIZE + TEST_LED_DATA_PLD_SIZE;
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + TEST_LED_DATA_PLD_SIZE +
+    SIMHUB_LED_DATA_FOOTER_SIZE;
+  uint32_t head = 0;
+
+  while(head < pktSize)
+  {
+    if(head < SIMHUB_PKT_HEADER_SIZE)
+      pktBuf[head] = pktHeader[head];
+    else if(head < footerStart)
+      pktBuf[head] = head;
+    else
+      pktBuf[head] = ledDataFooter[head - footerStart];
+    ++head;
+  }
+
+  return pktSize;
+}
+
+/**
+ * @test  IsPacketUnlockType must return true only when the packet is complete
+ *        and of the unlock upload type.
+*/
+ZTEST_F(simhubPkt_suite, test_IsPacketUnlockType_IsGoodPktType)
+{
+  bool result;
+  size_t pktSize;
+  SetupPktFunction setupFunctions[PKT_TYPE_COUNT * 2] =
+    {setupIncompleteUnlockPkt, setupCompleteUnlockPkt,
+     setupIncompleteProtocolPkt, setupCompleteProtocolPkt,
+     setupIncompleteLedCountPkt, setupCompleteLedCountPkt,
+     setupIncompleteLedDataPkt, setupCompleteLedDataPkt};
+  bool expectedResults[PKT_TYPE_COUNT * 2] = {false, true, false, false,
+                                              false, false, false, false};
+
+  for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
+  {
+    pktSize = setupFunctions[i](fixture->buffer);
+
+    result = IsPacketUnlockType(fixture->buffer, pktSize);
+    zassert_equal(expectedResults[i], result);
   }
 }
 
 /**
- * @test  simhubPktGetBufferUsedSpace must return the number of used bytes
- *        in the packet buffer.
+ * @test  IsPacketProtoType must return true only when the packet is complete
+ *        and of the protocol version type.
 */
-ZTEST_F(simhubPkt_suite, test_simhubPktGetBufferUsedSpace_ReturnUsedSpace)
+ZTEST_F(simhubPkt_suite, test_IsPacketProtoType_IsGoodPktType)
 {
-  size_t result;
-  uint32_t heads[PKT_BUF_SIZE_TEST_COUNT] =
-    {0, TEST_BUFFER_SIZE - TEST_BUFFER_SIZE / 4, TEST_BUFFER_SIZE / 2};
-  uint32_t tails[PKT_BUF_SIZE_TEST_COUNT] =
-    {TEST_BUFFER_SIZE, TEST_BUFFER_SIZE / 4, TEST_BUFFER_SIZE / 2};
-  size_t expectedFreeSpaces[PKT_BUF_SIZE_TEST_COUNT] = {128, 64, 0};
+  bool result;
+  size_t pktSize;
+  SetupPktFunction setupFunctions[PKT_TYPE_COUNT * 2] =
+    {setupIncompleteUnlockPkt, setupCompleteUnlockPkt,
+     setupIncompleteProtocolPkt, setupCompleteProtocolPkt,
+     setupIncompleteLedCountPkt, setupCompleteLedCountPkt,
+     setupIncompleteLedDataPkt, setupCompleteLedDataPkt};
+  bool expectedResults[PKT_TYPE_COUNT * 2] = {false, false, false, true,
+                                              false, false, false, false};
 
-  for(uint8_t i = 0; i < PKT_BUF_SIZE_TEST_COUNT; ++i)
+  for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
   {
-    fixture->pktBuf.head = heads[i];
-    fixture->pktBuf.tail = tails[i];
+    pktSize = setupFunctions[i](fixture->buffer);
 
-    result = simhubPktGetBufferUsedSpace(&fixture->pktBuf);
+    result = IsPacketProtoType(fixture->buffer, pktSize);
+    zassert_equal(expectedResults[i], result);
+  }
+}
 
-    zassert_equal(expectedFreeSpaces[i], result);
+/**
+ * @test  IsPacketLedCountType must return true only when the packet is complete
+ *        and of the LED count type.
+*/
+ZTEST_F(simhubPkt_suite, test_IsPacketLedCountType_IsGoodPktType)
+{
+  bool result;
+  size_t pktSize;
+  SetupPktFunction setupFunctions[PKT_TYPE_COUNT * 2] =
+    {setupIncompleteUnlockPkt, setupCompleteUnlockPkt,
+     setupIncompleteProtocolPkt, setupCompleteProtocolPkt,
+     setupIncompleteLedCountPkt, setupCompleteLedCountPkt,
+     setupIncompleteLedDataPkt, setupCompleteLedDataPkt};
+  bool expectedResults[PKT_TYPE_COUNT * 2] = {false, false, false, false,
+                                              false, true, false, false};
+
+  for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
+  {
+    pktSize = setupFunctions[i](fixture->buffer);
+
+    result = IsPacketLedCountType(fixture->buffer, pktSize);
+    zassert_equal(expectedResults[i], result);
+  }
+}
+
+/**
+ * @test  IsPacketLedDataType must return true only when the packet is complete
+ *        and of the LED data type.
+*/
+ZTEST_F(simhubPkt_suite, test_IsPacketLedDataType_IsGoodPktType)
+{
+  bool result;
+  size_t pktSize;
+  SetupPktFunction setupFunctions[PKT_TYPE_COUNT * 2] =
+    {setupIncompleteUnlockPkt, setupCompleteUnlockPkt,
+     setupIncompleteProtocolPkt, setupCompleteProtocolPkt,
+     setupIncompleteLedCountPkt, setupCompleteLedCountPkt,
+     setupIncompleteLedDataPkt, setupCompleteLedDataPkt};
+  bool expectedResults[PKT_TYPE_COUNT * 2] = {false, false, false, false,
+                                              false, false, false, true};
+
+  for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
+  {
+    ledCtrlGetRpmChaserPxlCnt_fake.return_val = TEST_LED_PIXEL_COUNT;
+    pktSize = setupFunctions[i](fixture->buffer);
+
+    result = IsPacketLedDataType(fixture->buffer, pktSize);
+    zassert_equal(expectedResults[i], result);
+    RESET_FAKE(ledCtrlGetRpmChaserPxlCnt);
   }
 }
 
