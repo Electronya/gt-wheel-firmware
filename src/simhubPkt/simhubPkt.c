@@ -17,7 +17,7 @@
 
 #include "simhubPkt.h"
 
-#include <stdlib.h>
+#include "zephyrRingBuffer.h"
 
 /**
  * @brief ACM device module name.
@@ -27,7 +27,25 @@
 /* Setting module logging */
 LOG_MODULE_DECLARE(SIMHUB_PKT_MODULE_NAME);
 
-void simhubPktInitBuffer(SimhubPktBuffer *pktBuf, uint8_t *buffer, size_t size)
+/**
+ * @brief The Rx ring buffer data area.
+*/
+uint8_t rxBufData[SIMHUB_RX_PKT_BUF_SIZE];
+
+/**
+ * @brief The Rx ring buffer.
+*/
+ZephyrRingBuffer rxBuffer;
+
+/**
+ * @brief The Tx ring buffer data area.
+*/
+uint8_t txBufData[SIMHUB_TX_PKT_BUF_SIZE];
+
+/**
+ * @brief The Tx ring buffer.
+*/
+ZephyrRingBuffer txBuffer;
 {
   pktBuf->buffer = buffer;
   pktBuf->size = size;
@@ -45,14 +63,15 @@ size_t simhubPktGetBufferSize(SimhubPktBuffer *pktBuf)
   return pktBuf->size;
 }
 
-size_t simhubPktGetBufferFreeSpace(SimhubPktBuffer *pktBuf)
+void simhubPktInitBuffer(void)
 {
-  return pktBuf->size - abs(pktBuf->head - pktBuf->tail);
+  zephyrRingBufInit(&rxBuffer, SIMHUB_RX_PKT_BUF_SIZE, rxBufData);
+  zephyrRingBufInit(&txBuffer, SIMHUB_TX_PKT_BUF_SIZE, txBufData);
 }
 
-size_t simhubPktGetBufferUsedSpace(SimhubPktBuffer *pktBuf)
+bool simhubPktIsPktAvailable(SimhubPktTypes *pktType)
 {
-  return abs(pktBuf->head - pktBuf->tail);
+  return false;
 }
 
 /** @} */

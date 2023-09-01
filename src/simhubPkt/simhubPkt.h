@@ -19,70 +19,40 @@
 #include <zephyr/kernel.h>
 
 /**
- * @brief The SIMHUB Rx packet buffer size.
+ * @brief The Rx packet buffer size.
 */
 #define SIMHUB_RX_PKT_BUF_SIZE        128
 
 /**
- * @brief The SIMHUB Tx packet buffer size.
+ * @brief The Tx packet buffer size.
 */
 #define SIMHUB_TX_PKT_BUF_SIZE        24
 
 /**
- * @brief The SIMHUB packet buffer.
+ * @brief The SIMHUB packet types.
 */
-typedef struct
+typedef enum
 {
-  size_t size;                  /**< The buffer size. */
-  uint32_t head;                /**< The buffer head. */
-  uint32_t tail;                /**< The buffer tail. */
-  uint8_t *buffer;              /**< The actual buffer. */
-} SimhubPktBuffer;
+  UNLOCK_TYPE,                  /**< The unlock upload packet type. */
+  PROTO_TYPE,                   /**< The protocol version packet type. */
+  LED_COUNT_TYPE,               /**< The get LED count packet type. */
+  LED_DATA_TYPE,                /**< The LED data update packet type. */
+  PKT_TYPE_COUNT,               /**< The number of packet type. */
+} SimhubPktTypes;
 
 /**
  * @brief   Initialize a SIMHUB packet buffer.
- *
- * @param pktBuf  The packet buffer to initialize.
- * @param buffer  The byte buffer.
- * @param size    The size of the byte buffer.
  */
-void simhubPktInitBuffer(SimhubPktBuffer *pktBuf, uint8_t *buffer, size_t size);
+void simhubPktInitBuffer(void);
 
 /**
- * @brief   Check if a packet buffer is empty.
+ * @brief   Check if a new packet is available.
  *
- * @param pktBuf  The packet buffer.
+ * @param pktType The type of the next available packet.
  *
- * @return  True if the packet buffer is empty, false otherwise.
+ * @return  True if a new packet is available, false otherwise.
  */
-bool simhubPktIsBufferEmpty(SimhubPktBuffer *pktBuf);
-
-/**
- * @brief   Get the size of a packet buffer.
- *
- * @param pktBuf  The packet buffer.
- *
- * @return  The total size of the packet buffer.
- */
-size_t simhubPktGetBufferSize(SimhubPktBuffer *pktBuf);
-
-/**
- * @brief   Get the free space in a packet buffer.
- *
- * @param pktBuf  The packet buffer.
- *
- * @return  The number of free bytes in the packet buffer.
- */
-size_t simhubPktGetBufferFreeSpace(SimhubPktBuffer *pktBuf);
-
-/**
- * @brief   Get the used space in a packet buffer.
- *
- * @param pktBuf  The packet buffer.
- *
- * @return  The number of used bytes in the packet buffer.
- */
-size_t simhubPktGetBufferUsedSpace(SimhubPktBuffer *pktBuf);
+bool simhubPktIsPktAvailable(SimhubPktTypes *pktType);
 
 #endif    /* SIMHUB_PACKET */
 

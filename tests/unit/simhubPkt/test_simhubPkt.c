@@ -20,6 +20,7 @@
 
 #include "simhubPkt.h"
 #include "simhubPkt.c"
+#include "zephyrRingBuffer.h"
 
 DEFINE_FFF_GLOBALS;
 
@@ -173,6 +174,36 @@ ZTEST_F(simhubPkt_suite, test_simhubPktGetBufferUsedSpace_ReturnUsedSpace)
 
     zassert_equal(expectedFreeSpaces[i], result);
   }
+}
+
+/**
+ * @test  simhubPktInitBuffer must initialize the Rx and Tx ring
+ *        internal buffer.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktInitBuffer_InitRingBuffers)
+{
+  simhubPktInitBuffer();
+
+  zassert_equal(2, zephyrRingBufInit_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufInit_fake.arg0_history[0]);
+  zassert_equal(128, zephyrRingBufInit_fake.arg1_history[0]);
+  zassert_equal(rxBufData, zephyrRingBufInit_fake.arg2_history[0]);
+  zassert_equal(&txBuffer, zephyrRingBufInit_fake.arg0_history[1]);
+  zassert_equal(24, zephyrRingBufInit_fake.arg1_history[1]);
+  zassert_equal(txBufData, zephyrRingBufInit_fake.arg2_history[1]);
+}
+
+#define NO_AVAIL_PKT_TEST_CNT   2
+/**
+ * @test  simhubPktIsPktAvailable must return false if there is no new
+ *        available packet in the buffer.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktIsPktAvailable_NoAvailable)
+{
+  // for(uint8_t i = 0; i < NO_AVAIL_PKT_TEST_CNT; ++i)
+  // {
+  //   if(i > 0)
+  // }
 }
 
 /** @} */
