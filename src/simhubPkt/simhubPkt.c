@@ -14,6 +14,7 @@
  */
 
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/util.h>
 
 #include "simhubPkt.h"
 #include "ledCtrl.h"
@@ -108,12 +109,13 @@ ZephyrRingBuffer txBuffer;
 bool IsPacketUnlockType(uint8_t *pktBuf, size_t size)
 {
   bool pktIsMatch = true;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
   uint8_t head = SIMHUB_PKT_HEADER_SIZE;
 
-  if( size < SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE)
+  if( size < pktSize)
     return false;
 
-  while(pktIsMatch && head < size)
+  while(pktIsMatch && head < pktSize)
   {
     if(pktBuf[head] != unlockPld[head - SIMHUB_PKT_HEADER_SIZE])
       pktIsMatch = false;
@@ -134,12 +136,13 @@ bool IsPacketUnlockType(uint8_t *pktBuf, size_t size)
 bool IsPacketProtoType(uint8_t *pktBuf, size_t size)
 {
   bool pktIsMatch = true;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
   uint8_t head = SIMHUB_PKT_HEADER_SIZE;
 
-  if( size < SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE)
+  if( size < pktSize)
     return false;
 
-  while(pktIsMatch && head < size)
+  while(pktIsMatch && head < pktSize)
   {
     if(pktBuf[head] != protoPld[head - SIMHUB_PKT_HEADER_SIZE])
       pktIsMatch = false;
@@ -160,12 +163,13 @@ bool IsPacketProtoType(uint8_t *pktBuf, size_t size)
 bool IsPacketLedCountType(uint8_t *pktBuf, size_t size)
 {
   bool pktIsMatch = true;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_LED_CNT_PLD_SIZE;
   uint8_t head = SIMHUB_PKT_HEADER_SIZE;
 
-  if( size < SIMHUB_PKT_HEADER_SIZE + SIMHUB_LED_CNT_PLD_SIZE)
+  if( size < pktSize)
     return false;
 
-  while(pktIsMatch && head < size)
+  while(pktIsMatch && head < pktSize)
   {
     if(pktBuf[head] != ledCntPld[head - SIMHUB_PKT_HEADER_SIZE])
       pktIsMatch = false;
@@ -196,7 +200,7 @@ bool IsPacketLedDataType(uint8_t *pktBuf, size_t size)
 
   head = SIMHUB_PKT_HEADER_SIZE + ledDataPldSize;
 
-  while(pktIsMatch && head < size)
+  while(pktIsMatch && head < pktSize)
   {
     if(pktBuf[head] != ledDataFooter[head - footerHead])
       pktIsMatch = false;
@@ -212,8 +216,62 @@ void simhubPktInitBuffer(void)
   zephyrRingBufInit(&txBuffer, SIMHUB_TX_PKT_BUF_SIZE, txBufData);
 }
 
+size_t simhubPktBufClaimPutting(uint8_t **data, size_t size)
+{
+  return zephyrRingBufClaimPutting(&rxBuffer, data, size);
+}
+
+int simhubPktBufFinishPutting(size_t size)
+{
+  return zephyrRingBufFinishPutting(&rxBuffer, size);
+}
+
+size_t simhubPktBufClaimGetting(uint8_t **data, size_t size)
+{
+  return zephyrRingBufClaimGetting(&txBuffer, data, size);
+}
+
+int simhubPktBufFinishGetting(size_t size)
+{
+  return zephyrRingBufFinishGetting(&txBuffer, size);
+}
+
 bool simhubPktIsPktAvailable(SimhubPktTypes *pktType)
 {
+  size_t size;
+  uint8_t data[SIMHUB_RX_PKT_BUF_SIZE];
+
+  size = zephyrRingBufPeek(&rxBuffer, data, SIMHUB_RX_PKT_BUF_SIZE);
+
+  if(IsPacketUnlockType(data, size))
+  {
+    printk("unlock packet valid\n");
+    *pktType = UNLOCK_TYPE;
+    return true;
+  }
+
+  if(IsPacketProtoType(data, size))
+  {
+    printk("proto packet valid\n");
+    *pktType = PROTO_TYPE;
+    return true;
+  }
+
+  if(IsPacketLedCountType(data, size))
+  {
+    printk("led count packet valid\n");
+    *pktType = LED_COUNT_TYPE;
+    return true;
+  }
+
+  if(IsPacketLedDataType(data, size))
+  {
+    printk("led data packet valid\n");
+    *pktType = LED_DATA_TYPE;
+    return true;
+  }
+
+  *pktType = PKT_TYPE_COUNT;
   return false;
 }
 

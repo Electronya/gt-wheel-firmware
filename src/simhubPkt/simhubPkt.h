@@ -46,6 +46,45 @@ typedef enum
 void simhubPktInitBuffer(void);
 
 /**
+ * @brief   Claim the packet buffer for putting data.
+ *
+ * @param data  The data area of the packet buffer claimed.
+ * @param size  The size of the data claimed.
+ *
+ * @return  The size that was really claimed from the packet buffer. Which may
+ *          be smaller than the requested size.
+ */
+size_t simhubPktBufClaimPutting(uint8_t **data, size_t size);
+
+/**
+ * @brief   Finish putting in packet packet buffer after claiming it.
+ *
+ * @param size  The size of data put inside the packet buffer.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+int simhubPktBufFinishPutting(size_t size);
+
+/**
+ * @brief   Claim th packet buffer for getting data.
+ *
+ * @param data  The data area packet packet buffer for getting data.
+ * @param size  The size of the area claimed.
+ *
+ * @return  The size that was really claimed from the packet buffer. Which may
+ *          be smaller than the requested size.
+ */
+size_t simhubPktBufClaimGetting(uint8_t **data, size_t size);
+
+/**
+ * @brief   Finish getting from the packet buffer after claiming it.
+ *
+ * @param size  The size of that data got from the packet buffer.
+ * @return int
+ */
+int simhubPktBufFinishGetting(size_t size);
+
+/**
  * @brief   Check if a new packet is available.
  *
  * @param pktType The type of the next available packet.

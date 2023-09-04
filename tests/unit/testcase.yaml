@@ -36,7 +36,7 @@ tests:
       - CONFIG_ENYA_USB_ACM=y
       - CONFIG_HEAP_MEM_POOL_SIZE=256
   gt_wheel.simhubPkt:
-    platform_allow: qemu_cortex_m0
+    platform_allow: qemu_cortex_m3
     tags: simhubPkt
     extra_args: TEST_SUITE=simhubPkt
     extra_configs:

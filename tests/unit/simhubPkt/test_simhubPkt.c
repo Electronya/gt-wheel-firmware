@@ -28,6 +28,14 @@ DEFINE_FFF_GLOBALS;
 
 /* mocks */
 FAKE_VOID_FUNC(zephyrRingBufInit, ZephyrRingBuffer*, size_t, uint8_t*);
+FAKE_VALUE_FUNC(size_t, zephyrRingBufGet, ZephyrRingBuffer*, uint8_t*, size_t);
+FAKE_VALUE_FUNC(size_t, zephyrRingBufClaimGetting, ZephyrRingBuffer*, uint8_t**,
+  size_t);
+FAKE_VALUE_FUNC(int, zephyrRingBufFinishGetting, ZephyrRingBuffer*, size_t);
+FAKE_VALUE_FUNC(size_t, zephyrRingBufClaimPutting, ZephyrRingBuffer*, uint8_t**,
+  size_t);
+FAKE_VALUE_FUNC(int, zephyrRingBufFinishPutting, ZephyrRingBuffer*, size_t);
+FAKE_VALUE_FUNC(size_t, zephyrRingBufPeek, ZephyrRingBuffer*, uint8_t*, size_t);
 
 FAKE_VALUE_FUNC(uint32_t, ledCtrlGetRpmChaserPxlCnt);
 
@@ -76,7 +84,19 @@ static void simhubPktCaseSetup(void *f)
   for(uint8_t i = 0; i < TEST_BUFFER_SIZE; ++i)
     fixture->buffer[i] = 0;
 
+  for(uint8_t i = 0; i < SIMHUB_RX_PKT_BUF_SIZE; ++i)
+    rxBufData[i] = 0;
+
+  for(uint8_t i = 0; i < SIMHUB_TX_PKT_BUF_SIZE; ++i)
+    txBufData[i] = 0;
+
   RESET_FAKE(zephyrRingBufInit);
+  RESET_FAKE(zephyrRingBufGet);
+  RESET_FAKE(zephyrRingBufClaimGetting);
+  RESET_FAKE(zephyrRingBufFinishGetting);
+  RESET_FAKE(zephyrRingBufClaimPutting);
+  RESET_FAKE(zephyrRingBufFinishPutting);
+  RESET_FAKE(zephyrRingBufPeek);
   RESET_FAKE(ledCtrlGetRpmChaserPxlCnt);
 }
 
@@ -136,7 +156,7 @@ static size_t setupCompleteUnlockPkt(uint8_t *pktBuf)
  */
 static size_t setupIncompleteProtocolPkt(uint8_t *pktBuf)
 {
-  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
   uint32_t head = 0;
 
   while(head < pktSize - 1)
@@ -158,7 +178,7 @@ static size_t setupIncompleteProtocolPkt(uint8_t *pktBuf)
  */
 static size_t setupCompleteProtocolPkt(uint8_t *pktBuf)
 {
-  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
   uint32_t head = 0;
 
   while(head < pktSize)
@@ -180,7 +200,7 @@ static size_t setupCompleteProtocolPkt(uint8_t *pktBuf)
  */
 static size_t setupIncompleteLedCountPkt(uint8_t *pktBuf)
 {
-  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_LED_CNT_PLD_SIZE;
   uint32_t head = 0;
 
   while(head < pktSize - 1)
@@ -189,6 +209,7 @@ static size_t setupIncompleteLedCountPkt(uint8_t *pktBuf)
       pktBuf[head] = pktHeader[head];
     else
       pktBuf[head] = ledCntPld[head - SIMHUB_PKT_HEADER_SIZE];
+    printk("byte: %d\n", pktBuf[head]);
     ++head;
   }
 
@@ -202,7 +223,7 @@ static size_t setupIncompleteLedCountPkt(uint8_t *pktBuf)
  */
 static size_t setupCompleteLedCountPkt(uint8_t *pktBuf)
 {
-  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_LED_CNT_PLD_SIZE;
   uint32_t head = 0;
 
   while(head < pktSize)
@@ -225,8 +246,7 @@ static size_t setupCompleteLedCountPkt(uint8_t *pktBuf)
 static size_t setupIncompleteLedDataPkt(uint8_t *pktBuf)
 {
   uint8_t footerStart = SIMHUB_PKT_HEADER_SIZE + TEST_LED_DATA_PLD_SIZE;
-  uint8_t pktSize = SIMHUB_PKT_HEADER_SIZE + TEST_LED_DATA_PLD_SIZE +
-    SIMHUB_LED_DATA_FOOTER_SIZE - 1;
+  uint8_t pktSize = footerStart + SIMHUB_LED_DATA_FOOTER_SIZE - 1;
   uint32_t head = 0;
 
   while(head < pktSize - 1)
@@ -270,6 +290,21 @@ static size_t setupCompleteLedDataPkt(uint8_t *pktBuf)
 }
 
 /**
+ * @brief   Custom stub to get from the Rx packet buffer.
+ *
+ * @param buffer  The zephyr ring buffer.
+ * @param data    The output buffer.
+ * @param size    The requested data size.
+ *
+ * @return  The real data size.
+ */
+size_t customRxGet(ZephyrRingBuffer *buffer, uint8_t *data, size_t size)
+{
+  bytecpy(data, rxBufData, size);
+  return size;
+}
+
+/**
  * @test  IsPacketUnlockType must return true only when the packet is complete
  *        and of the unlock upload type.
 */
@@ -287,6 +322,9 @@ ZTEST_F(simhubPkt_suite, test_IsPacketUnlockType_IsGoodPktType)
 
   for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
   {
+    for(uint8_t i = 0; i < TEST_BUFFER_SIZE; ++i)
+      fixture->buffer[i] = 0;
+
     pktSize = setupFunctions[i](fixture->buffer);
 
     result = IsPacketUnlockType(fixture->buffer, pktSize);
@@ -312,6 +350,9 @@ ZTEST_F(simhubPkt_suite, test_IsPacketProtoType_IsGoodPktType)
 
   for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
   {
+    for(uint8_t i = 0; i < TEST_BUFFER_SIZE; ++i)
+      fixture->buffer[i] = 0;
+
     pktSize = setupFunctions[i](fixture->buffer);
 
     result = IsPacketProtoType(fixture->buffer, pktSize);
@@ -337,6 +378,9 @@ ZTEST_F(simhubPkt_suite, test_IsPacketLedCountType_IsGoodPktType)
 
   for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
   {
+    for(uint8_t i = 0; i < TEST_BUFFER_SIZE; ++i)
+      fixture->buffer[i] = 0;
+
     pktSize = setupFunctions[i](fixture->buffer);
 
     result = IsPacketLedCountType(fixture->buffer, pktSize);
@@ -362,6 +406,9 @@ ZTEST_F(simhubPkt_suite, test_IsPacketLedDataType_IsGoodPktType)
 
   for(uint8_t i = 0; i < PKT_TYPE_COUNT * 2; ++i)
   {
+    for(uint8_t i = 0; i < TEST_BUFFER_SIZE; ++i)
+      fixture->buffer[i] = 0;
+
     ledCtrlGetRpmChaserPxlCnt_fake.return_val = TEST_LED_PIXEL_COUNT;
     pktSize = setupFunctions[i](fixture->buffer);
 
@@ -388,17 +435,179 @@ ZTEST(simhubPkt_suite, test_simhubPktInitBuffer_InitRingBuffers)
   zassert_equal(txBufData, zephyrRingBufInit_fake.arg2_history[1]);
 }
 
-#define NO_AVAIL_PKT_TEST_CNT   2
 /**
- * @test  simhubPktIsPktAvailable must return false if there is no new
- *        available packet in the buffer.
+ * @test  simhubPktBufClaimPutting must claim the Rx buffer for putting data
+ *        and return the available data area and its size.
 */
-ZTEST_F(simhubPkt_suite, test_simhubPktIsPktAvailable_NoAvailable)
+ZTEST(simhubPkt_suite, simhubPktBufClaimPutting_ClaimPutting)
 {
-  // for(uint8_t i = 0; i < NO_AVAIL_PKT_TEST_CNT; ++i)
-  // {
-  //   if(i > 0)
-  // }
+  size_t reqSize = 8;
+  size_t expectedSize = 3;
+  uint8_t *data = NULL;
+
+  zephyrRingBufClaimPutting_fake.return_val = expectedSize;
+
+  zassert_equal(expectedSize, simhubPktBufClaimPutting(&data, reqSize));
+  zassert_equal(1, zephyrRingBufClaimPutting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufClaimPutting_fake.arg0_val);
+  zassert_equal(&data, zephyrRingBufClaimPutting_fake.arg1_val);
+  zassert_equal(reqSize, zephyrRingBufClaimPutting_fake.arg2_val);
+}
+
+/**
+ * @test  simhubPktBufFinishPutting must return the error code when finishing
+ *        the putting operation fails.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktBufFinishPutting_Fail)
+{
+  int failRet = -EINVAL;
+  size_t size = 8;
+
+  zephyrRingBufFinishPutting_fake.return_val = failRet;
+
+  zassert_equal(failRet, simhubPktBufFinishPutting(size));
+  zassert_equal(1, zephyrRingBufFinishPutting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishPutting_fake.arg0_val);
+  zassert_equal(size, zephyrRingBufFinishPutting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktBufFinishPutting must return the success code when finishing
+ *        the putting operation succeeds.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktBufFinishPutting_Success)
+{
+  int successRet = 0;
+  size_t size = 8;
+
+  zephyrRingBufFinishPutting_fake.return_val = successRet;
+
+  zassert_equal(successRet, simhubPktBufFinishPutting(size));
+  zassert_equal(1, zephyrRingBufFinishPutting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishPutting_fake.arg0_val);
+  zassert_equal(size, zephyrRingBufFinishPutting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktBufClaimGetting must claim the Tx buffer for getting data
+ *        and return the available data area and its size.
+*/
+ZTEST(simhubPkt_suite, test_simhubPxtBufClaimGetting_ClaimGetting)
+{
+  size_t reqSize = 8;
+  size_t expectedSize = 3;
+  uint8_t *data = NULL;
+
+  zephyrRingBufClaimGetting_fake.return_val = expectedSize;
+
+  zassert_equal(expectedSize, simhubPktBufClaimGetting(&data, reqSize));
+  zassert_equal(1, zephyrRingBufClaimGetting_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufClaimGetting_fake.arg0_val);
+  zassert_equal(&data, zephyrRingBufClaimGetting_fake.arg1_val);
+  zassert_equal(reqSize, zephyrRingBufClaimGetting_fake.arg2_val);
+}
+
+/**
+ * @test  simhubPktBufFinishGetting must return the error code when finishing
+ *        the getting operation fails.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktBufFinishGetting_Fail)
+{
+  int failRet = -EINVAL;
+  size_t size = 8;
+
+  zephyrRingBufFinishGetting_fake.return_val = failRet;
+
+  zassert_equal(failRet, simhubPktBufFinishGetting(size));
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(size, zephyrRingBufFinishGetting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktBufFinishGetting must return the success code when finishing
+ *        the getting operation succeeds.
+*/
+ZTEST_F(simhubPkt_suite, test_simhubPktBufFinishGetting_Success)
+{
+  int successRet = 0;
+  size_t size = 8;
+
+  zephyrRingBufFinishGetting_fake.return_val = successRet;
+
+  zassert_equal(successRet, simhubPktBufFinishGetting(size));
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(size, zephyrRingBufFinishGetting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktIsPktAvailable must return false and set the packet type
+ *        to the packet type count if there is no new available packet in
+ *        the buffer.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktIsPktAvailable_NoAvailable)
+{
+  size_t pktSize;
+  SimhubPktTypes packetType;
+  SetupPktFunction setupFunctions[PKT_TYPE_COUNT] =
+    {setupIncompleteUnlockPkt, setupIncompleteProtocolPkt,
+     setupIncompleteLedCountPkt, setupIncompleteLedDataPkt};
+
+  for(uint8_t i = 0; i < PKT_TYPE_COUNT; ++i)
+  {
+    printk("test ID: %d\n", i);
+    for(uint8_t i = 0; i < SIMHUB_RX_PKT_BUF_SIZE; ++i)
+      rxBufData[i] = 0;
+
+    zephyrRingBufPeek_fake.custom_fake = customRxGet;
+    if(i == PKT_TYPE_COUNT - 1)
+      ledCtrlGetRpmChaserPxlCnt_fake.return_val = TEST_LED_PIXEL_COUNT;
+    pktSize = setupFunctions[i](rxBufData);
+
+    zassert_false(simhubPktIsPktAvailable(&packetType));
+    zassert_equal(PKT_TYPE_COUNT, packetType);
+    zassert_equal(1, zephyrRingBufPeek_fake.call_count);
+    zassert_equal(&rxBuffer, zephyrRingBufPeek_fake.arg0_val);
+    zassert_equal(SIMHUB_RX_PKT_BUF_SIZE, zephyrRingBufPeek_fake.arg2_val);
+    RESET_FAKE(zephyrRingBufPeek);
+  }
+}
+
+/**
+ * @test  simhubPktIsPktAvailable must return true and set the packet type
+ *        to the appropriate one if there is a new available packet in
+ *        the buffer.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktIsPktAvailable_Available)
+{
+  size_t pktSize;
+  SimhubPktTypes packetType;
+  SimhubPktTypes expectedPktTypes[PKT_TYPE_COUNT] = {UNLOCK_TYPE,
+                                                     PROTO_TYPE,
+                                                     LED_COUNT_TYPE,
+                                                     LED_DATA_TYPE};
+  SetupPktFunction setupFunctions[PKT_TYPE_COUNT] =
+    {setupCompleteUnlockPkt, setupCompleteProtocolPkt,
+     setupCompleteLedCountPkt, setupCompleteLedDataPkt};
+
+  for(uint8_t i = 0; i < PKT_TYPE_COUNT; ++i)
+  {
+    for(uint8_t i = 0; i < SIMHUB_RX_PKT_BUF_SIZE; ++i)
+      rxBufData[i] = 0;
+
+    zephyrRingBufPeek_fake.custom_fake = customRxGet;
+    if(i == PKT_TYPE_COUNT - 1)
+      ledCtrlGetRpmChaserPxlCnt_fake.return_val = TEST_LED_PIXEL_COUNT;
+    pktSize = setupFunctions[i](rxBufData);
+
+    zassert_true(simhubPktIsPktAvailable(&packetType));
+    zassert_equal(expectedPktTypes[i], packetType);
+    zassert_equal(1, zephyrRingBufPeek_fake.call_count);
+    zassert_equal(&rxBuffer, zephyrRingBufPeek_fake.arg0_val);
+    zassert_equal(SIMHUB_RX_PKT_BUF_SIZE, zephyrRingBufPeek_fake.arg2_val);
+    RESET_FAKE(zephyrRingBufPeek);
+  }
 }
 
 /** @} */
