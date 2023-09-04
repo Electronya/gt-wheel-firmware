@@ -209,7 +209,6 @@ static size_t setupIncompleteLedCountPkt(uint8_t *pktBuf)
       pktBuf[head] = pktHeader[head];
     else
       pktBuf[head] = ledCntPld[head - SIMHUB_PKT_HEADER_SIZE];
-    printk("byte: %d\n", pktBuf[head]);
     ++head;
   }
 
@@ -556,7 +555,6 @@ ZTEST(simhubPkt_suite, test_simhubPktIsPktAvailable_NoAvailable)
 
   for(uint8_t i = 0; i < PKT_TYPE_COUNT; ++i)
   {
-    printk("test ID: %d\n", i);
     for(uint8_t i = 0; i < SIMHUB_RX_PKT_BUF_SIZE; ++i)
       rxBufData[i] = 0;
 
@@ -608,6 +606,40 @@ ZTEST(simhubPkt_suite, test_simhubPktIsPktAvailable_Available)
     zassert_equal(SIMHUB_RX_PKT_BUF_SIZE, zephyrRingBufPeek_fake.arg2_val);
     RESET_FAKE(zephyrRingBufPeek);
   }
+}
+
+/**
+ * @test  simhubPktProcessUnlock must return the error code if removing the
+ *        data from the Rx packet buffer fails.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessUnlock_Fail)
+{
+  int failRet = -EINVAL;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+
+  zephyrRingBufFinishGetting_fake.return_val = failRet;
+
+  zassert_equal(failRet, simhubPktProcessUnlock());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(pktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktProcessUnlock must return the success code and remove the
+ *        data from the Rx packet buffer.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessUnlock_Success)
+{
+  int successRet = 0;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+
+  zephyrRingBufFinishGetting_fake.return_val = successRet;
+
+  zassert_equal(successRet, simhubPktProcessUnlock());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(pktSize, zephyrRingBufFinishGetting_fake.arg1_val);
 }
 
 /** @} */

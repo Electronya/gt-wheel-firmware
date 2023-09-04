@@ -245,34 +245,37 @@ bool simhubPktIsPktAvailable(SimhubPktTypes *pktType)
 
   if(IsPacketUnlockType(data, size))
   {
-    printk("unlock packet valid\n");
     *pktType = UNLOCK_TYPE;
     return true;
   }
 
   if(IsPacketProtoType(data, size))
   {
-    printk("proto packet valid\n");
     *pktType = PROTO_TYPE;
     return true;
   }
 
   if(IsPacketLedCountType(data, size))
   {
-    printk("led count packet valid\n");
     *pktType = LED_COUNT_TYPE;
     return true;
   }
 
   if(IsPacketLedDataType(data, size))
   {
-    printk("led data packet valid\n");
     *pktType = LED_DATA_TYPE;
     return true;
   }
 
   *pktType = PKT_TYPE_COUNT;
   return false;
+}
+
+int simhubPktProcessUnlock(void)
+{
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
+
+  return zephyrRingBufFinishGetting(&rxBuffer, pktSize);
 }
 
 /** @} */

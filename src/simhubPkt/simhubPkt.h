@@ -93,6 +93,13 @@ int simhubPktBufFinishGetting(size_t size);
  */
 bool simhubPktIsPktAvailable(SimhubPktTypes *pktType);
 
+/**
+ * @brief   Process the unlock update process.
+ *
+ * @return  0 if success, the error code otherwise.
+ */
+int simhubPktProcessUnlock(void);
+
 #endif    /* SIMHUB_PACKET */
 
 /** @} */
