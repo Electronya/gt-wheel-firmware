@@ -28,6 +28,7 @@ DEFINE_FFF_GLOBALS;
 
 /* mocks */
 FAKE_VOID_FUNC(zephyrRingBufInit, ZephyrRingBuffer*, size_t, uint8_t*);
+FAKE_VALUE_FUNC(size_t, zephyrRingBufGetFreeSpace, ZephyrRingBuffer*);
 FAKE_VALUE_FUNC(size_t, zephyrRingBufGet, ZephyrRingBuffer*, uint8_t*, size_t);
 FAKE_VALUE_FUNC(size_t, zephyrRingBufClaimGetting, ZephyrRingBuffer*, uint8_t**,
   size_t);
@@ -36,6 +37,7 @@ FAKE_VALUE_FUNC(size_t, zephyrRingBufClaimPutting, ZephyrRingBuffer*, uint8_t**,
   size_t);
 FAKE_VALUE_FUNC(int, zephyrRingBufFinishPutting, ZephyrRingBuffer*, size_t);
 FAKE_VALUE_FUNC(size_t, zephyrRingBufPeek, ZephyrRingBuffer*, uint8_t*, size_t);
+FAKE_VALUE_FUNC(size_t, zephyrRingBufPut, ZephyrRingBuffer*, uint8_t*, size_t);
 
 FAKE_VALUE_FUNC(uint32_t, ledCtrlGetRpmChaserPxlCnt);
 
@@ -91,9 +93,11 @@ static void simhubPktCaseSetup(void *f)
     txBufData[i] = 0;
 
   RESET_FAKE(zephyrRingBufInit);
+  RESET_FAKE(zephyrRingBufGetFreeSpace);
   RESET_FAKE(zephyrRingBufGet);
   RESET_FAKE(zephyrRingBufClaimGetting);
   RESET_FAKE(zephyrRingBufFinishGetting);
+  RESET_FAKE(zephyrRingBufPut);
   RESET_FAKE(zephyrRingBufClaimPutting);
   RESET_FAKE(zephyrRingBufFinishPutting);
   RESET_FAKE(zephyrRingBufPeek);
@@ -300,6 +304,24 @@ static size_t setupCompleteLedDataPkt(uint8_t *pktBuf)
 size_t customRxGet(ZephyrRingBuffer *buffer, uint8_t *data, size_t size)
 {
   bytecpy(data, rxBufData, size);
+  return size;
+}
+
+/**
+ * @brief   Custom stub to put protocol version response in the Tx
+ *          packet buffer.
+ *
+ * @param buffer  The zephyr ring buffer.
+ * @param data    The input buffer.
+ * @param size    The size of the input buffer.
+ *
+ * @return  The real data size.
+ */
+size_t customProtoTxPut(ZephyrRingBuffer *buffer, uint8_t *data, size_t size)
+{
+  zassert_equal(SIMHUB_PROTO_RES_SIZE, size);
+  for(uint8_t i = 0; i < size; ++i)
+    zassert_equal(protoRes[i], data[i]);
   return size;
 }
 
@@ -640,6 +662,69 @@ ZTEST(simhubPkt_suite, test_simhubPktProcessUnlock_Success)
   zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
   zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
   zassert_equal(pktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktProcessProto must return the error code if removing the
+ *        data from the Rx packet buffer fails.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessProto_RxBufferClearFail)
+{
+  int failRet = -EINVAL;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
+
+  zephyrRingBufFinishGetting_fake.return_val = failRet;
+
+  zassert_equal(failRet, simhubPktProcessProto());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(pktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktProcessProto must return the error code if writing the
+ *        response to the Tx buffer fails.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessProto_TxBufferWriteFail)
+{
+  int failRet = -ENOSPC;
+  int successRet = 0;
+  size_t rxPktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
+  size_t txPktSize = SIMHUB_PROTO_RES_SIZE;
+
+  zephyrRingBufFinishGetting_fake.return_val = successRet;
+  zephyrRingBufGetFreeSpace_fake.return_val = txPktSize - 1;
+
+  zassert_equal(failRet, simhubPktProcessProto());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(rxPktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+  zassert_equal(1, zephyrRingBufGetFreeSpace_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufGetFreeSpace_fake.arg0_val);
+}
+
+/**
+ * @test  simhubPktProcessProto must return the success code and put the
+ *        response in the Tx buffer.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessProto_Success)
+{
+  int successRet = 0;
+  size_t rxPktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
+  size_t txPktSize = SIMHUB_PROTO_RES_SIZE;
+
+  zephyrRingBufFinishGetting_fake.return_val = successRet;
+  zephyrRingBufGetFreeSpace_fake.return_val = txPktSize;
+  zephyrRingBufPut_fake.custom_fake = customProtoTxPut;
+
+  zassert_equal(successRet, simhubPktProcessProto());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(rxPktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+  zassert_equal(1, zephyrRingBufGetFreeSpace_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufGetFreeSpace_fake.arg0_val);
+  zassert_equal(1, zephyrRingBufPut_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufPut_fake.arg0_val);
 }
 
 /** @} */

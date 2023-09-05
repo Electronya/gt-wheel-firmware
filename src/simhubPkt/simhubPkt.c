@@ -44,6 +44,11 @@ LOG_MODULE_DECLARE(SIMHUB_PKT_MODULE_NAME);
 #define SIMHUB_PROTO_PLD_SIZE         5
 
 /**
+ * @brief The size of the protocol version response.
+*/
+#define SIMHUB_PROTO_RES_SIZE         12
+
+/**
  * @brief The size of the get LED count payload.
 */
 #define SIMHUB_LED_CNT_PLD_SIZE       5
@@ -67,6 +72,11 @@ uint8_t unlockPld[SIMHUB_UNLOCK_PLD_SIZE] = {'u', 'n', 'l', 'o', 'c', 'k'};
  * @brief The protocol payload content.
 */
 uint8_t protoPld[SIMHUB_PROTO_PLD_SIZE] = {'p', 'r', 'o', 't', 'o'};
+
+/**
+ * @brief The protocol response content.
+*/
+uint8_t protoRes[SIMHUB_PROTO_RES_SIZE] = {'S', 'I', 'M', 'H', 'U', 'B', '_', '1', '.', '0', '\r', '\n'};
 
 /**
  * @brief The LED count payload content.
@@ -273,9 +283,46 @@ bool simhubPktIsPktAvailable(SimhubPktTypes *pktType)
 
 int simhubPktProcessUnlock(void)
 {
+  int rc;
   size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_UNLOCK_PLD_SIZE;
 
-  return zephyrRingBufFinishGetting(&rxBuffer, pktSize);
+  rc = zephyrRingBufFinishGetting(&rxBuffer, pktSize);
+  if(rc < 0)
+    LOG_ERR("unable to clear unlock packet from Rx buffer");
+
+  return rc;
+}
+
+int simhubPktProcessProto(void)
+{
+  int rc;
+  size_t freeSpace;
+  size_t txByteCnt;
+  size_t rxPktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
+
+  rc = zephyrRingBufFinishGetting(&rxBuffer, rxPktSize);
+  if(rc < 0)
+  {
+    LOG_ERR("unable to clear proto packet from Rx buffer");
+    return rc;
+  }
+
+  freeSpace = zephyrRingBufGetFreeSpace(&txBuffer);
+  printk("free space: %d\n", freeSpace);
+  if(freeSpace < SIMHUB_PROTO_RES_SIZE)
+  {
+    LOG_ERR("not enough place in Tx buffer for response");
+    return -ENOSPC;
+  }
+
+  txByteCnt = zephyrRingBufPut(&txBuffer, protoRes, SIMHUB_PROTO_RES_SIZE);
+  if(txByteCnt < SIMHUB_PROTO_RES_SIZE)
+  {
+    LOG_ERR("unable to put all proto response bytes");
+    return -ENOSPC;
+  }
+
+  return 0;
 }
 
 /** @} */

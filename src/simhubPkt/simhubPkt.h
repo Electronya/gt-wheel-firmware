@@ -94,11 +94,18 @@ int simhubPktBufFinishGetting(size_t size);
 bool simhubPktIsPktAvailable(SimhubPktTypes *pktType);
 
 /**
- * @brief   Process the unlock update process.
+ * @brief   Process the unlock update packet.
  *
- * @return  0 if success, the error code otherwise.
+ * @return  0 if successful, the error code otherwise.
  */
 int simhubPktProcessUnlock(void);
+
+/**
+ * @brief   Process the protocol packet.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+int simhubPktProcessProto(void);
 
 #endif    /* SIMHUB_PACKET */
 
