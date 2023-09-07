@@ -375,14 +375,14 @@ int simhubPktProcessLedCount(void)
     return rc;
   }
 
+  txByteCnt = generateLedCountResponse(buffer, SIMHUB_LED_CNT_RES_SIZE);
+
   freeSpace = zephyrRingBufGetFreeSpace(&txBuffer);
-  if(freeSpace < SIMHUB_PROTO_RES_SIZE)
+  if(freeSpace < txByteCnt)
   {
     LOG_ERR("not enough place in Tx buffer for response");
     return -ENOSPC;
   }
-
-  txByteCnt = generateLedCountResponse(buffer, SIMHUB_LED_CNT_RES_SIZE);
 
   puttedByteCnt = zephyrRingBufPut(&txBuffer, buffer, txByteCnt);
   if(puttedByteCnt < txByteCnt)
@@ -392,6 +392,11 @@ int simhubPktProcessLedCount(void)
   }
 
   return rc;
+}
+
+int simhubPktProcessLedData(void)
+{
+  return 0;
 }
 
 /** @} */

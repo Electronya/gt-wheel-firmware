@@ -114,6 +114,13 @@ int simhubPktProcessProto(void);
  */
 int simhubPktProcessLedCount(void);
 
+/**
+ * @brief   Process the LED data packet.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+int simhubPktProcessLedData(void);
+
 #endif    /* SIMHUB_PACKET */
 
 /** @} */
