@@ -19,6 +19,11 @@
 #include "zephyrLedStrip.h"
 
 /**
+//  * @brief The theoretical maximum number of pixel in the chaser.
+*/
+#define LED_CTRL_MAX_CHASER_PIXEL       999
+
+/**
  * @brief   Initialize the module.
  *
  * @return  0 if successful, the error code otherwise.
