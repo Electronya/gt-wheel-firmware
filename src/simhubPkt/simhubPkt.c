@@ -358,6 +358,40 @@ int simhubPktProcessProto(void)
 
   return rc;
 }
+
+int simhubPktProcessLedCount(void)
+{
+  int rc;
+  size_t freeSpace;
+  size_t txByteCnt;
+  size_t puttedByteCnt;
+  size_t rxPktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_LED_CNT_PLD_SIZE;
+  uint8_t buffer[SIMHUB_LED_CNT_RES_SIZE];
+
+  rc = zephyrRingBufFinishGetting(&rxBuffer, rxPktSize);
+  if(rc < 0)
+  {
+    LOG_ERR("unable to clear proto packet from Rx buffer");
+    return rc;
+  }
+
+  freeSpace = zephyrRingBufGetFreeSpace(&txBuffer);
+  if(freeSpace < SIMHUB_PROTO_RES_SIZE)
+  {
+    LOG_ERR("not enough place in Tx buffer for response");
+    return -ENOSPC;
+  }
+
+  txByteCnt = generateLedCountResponse(buffer, SIMHUB_LED_CNT_RES_SIZE);
+
+  puttedByteCnt = zephyrRingBufPut(&txBuffer, buffer, txByteCnt);
+  if(puttedByteCnt < txByteCnt)
+  {
+    LOG_ERR("unable to put all proto response bytes");
+    return -ENOSPC;
+  }
+
+  return rc;
 }
 
 /** @} */

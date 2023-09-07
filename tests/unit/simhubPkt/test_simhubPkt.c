@@ -785,4 +785,72 @@ ZTEST(simhubPkt_suite, test_simhubPktProcessProto_Success)
   zassert_equal(&txBuffer, zephyrRingBufPut_fake.arg0_val);
 }
 
+/**
+ * @test  simhubPktProcessLedCount must return the error code if removing the
+ *        data from the Rx packet buffer fails.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessLedCount_RxBufferClearFail)
+{
+  int failRet = -EINVAL;
+  size_t pktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_LED_CNT_PLD_SIZE;
+
+  zephyrRingBufFinishGetting_fake.return_val = failRet;
+
+  zassert_equal(failRet, simhubPktProcessLedCount());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(pktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+}
+
+/**
+ * @test  simhubPktProcessLedCount must return the error code if writing the
+ *        response to the Tx buffer fails.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessLedCount_TxBufferWriteFail)
+{
+  int failRet = -ENOSPC;
+  int successRet = 0;
+  size_t rxPktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
+  size_t txPktSize = 3;
+
+  zephyrRingBufFinishGetting_fake.return_val = successRet;
+  ledCtrlGetRpmChaserPxlCnt_fake.return_val = TEST_LED_PIXEL_COUNT;
+  zephyrRingBufGetFreeSpace_fake.return_val = txPktSize - 1;
+
+  zassert_equal(failRet, simhubPktProcessLedCount());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(rxPktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+  zassert_equal(1, ledCtrlGetRpmChaserPxlCnt_fake.call_count);
+  zassert_equal(1, zephyrRingBufGetFreeSpace_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufGetFreeSpace_fake.arg0_val);
+}
+
+/**
+ * @test  simhubPktProcessLedCount must return the success code, generate the
+ *        response and put the response in the Tx buffer.
+*/
+ZTEST(simhubPkt_suite, test_simhubPktProcessLedCount_Success)
+{
+  int successRet = 0;
+  size_t rxPktSize = SIMHUB_PKT_HEADER_SIZE + SIMHUB_PROTO_PLD_SIZE;
+  size_t txPktSize = 3;
+
+  zephyrRingBufFinishGetting_fake.return_val = successRet;
+  ledCtrlGetRpmChaserPxlCnt_fake.return_val = TEST_LED_PIXEL_COUNT;
+  zephyrRingBufGetFreeSpace_fake.return_val = txPktSize;
+  zephyrRingBufPut_fake.return_val = txPktSize;
+
+  zassert_equal(successRet, simhubPktProcessLedCount());
+  zassert_equal(1, zephyrRingBufFinishGetting_fake.call_count);
+  zassert_equal(&rxBuffer, zephyrRingBufFinishGetting_fake.arg0_val);
+  zassert_equal(rxPktSize, zephyrRingBufFinishGetting_fake.arg1_val);
+  zassert_equal(1, ledCtrlGetRpmChaserPxlCnt_fake.call_count);
+  zassert_equal(1, zephyrRingBufGetFreeSpace_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufGetFreeSpace_fake.arg0_val);
+  zassert_equal(1, zephyrRingBufPut_fake.call_count);
+  zassert_equal(&txBuffer, zephyrRingBufPut_fake.arg0_val);
+  zassert_equal(txPktSize, zephyrRingBufPut_fake.arg2_val);
+}
+
 /** @} */
