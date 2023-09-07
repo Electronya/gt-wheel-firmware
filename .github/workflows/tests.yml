@@ -33,5 +33,7 @@ jobs:
       uses: actions/upload-artifact@v3
       if: always()
       with:
-        name: tv-bench-ctrl-firm-test-results
-        path: app/twister-out/
+        name: gt-wheel-firm-test-results
+        path: |
+          app/twister-out/build.log
+          app/twister-out/handler.log

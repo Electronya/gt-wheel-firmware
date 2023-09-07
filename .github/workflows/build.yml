@@ -46,5 +46,5 @@ jobs:
       uses: actions/upload-artifact@v3
       if: github.event_name != 'pull_request'
       with:
-        name: tv-bench-ctrl-frim-builds
+        name: gt-wheel-frim-builds
         path: app/build-out/
