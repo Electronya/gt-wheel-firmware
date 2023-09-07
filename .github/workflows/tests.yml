@@ -29,11 +29,12 @@ jobs:
     - name: tests
       working-directory: app
       run: ../zephyr/scripts/twister -T tests/unit/
+    - name: achiving artifact
+      working-directory: app
+      run: tar -czvf twister-out.tar.gz ./twister-out
     - name: upload results
       uses: actions/upload-artifact@v3
       if: always()
       with:
         name: gt-wheel-firm-test-results
-        path: |
-          app/twister-out/build.log
-          app/twister-out/handler.log
+        path: app/twister-out.tar.gz
