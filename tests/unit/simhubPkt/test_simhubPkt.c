@@ -439,6 +439,64 @@ ZTEST_F(simhubPkt_suite, test_IsPacketLedDataType_IsGoodPktType)
   }
 }
 
+#define LED_CNT_RES_TEST_COUNT      4
+/**
+ * @test  generateLedCountResponse must return the error code if the conversion
+ *        of the chaser pixel count fails.
+*/
+ZTEST(simhubPkt_suite, test_generateLedCountResponse_ConversionFail)
+{
+  int failRet = -ENOSPC;
+  uint8_t buffer[SIMHUB_LED_CNT_RES_SIZE] = {0};
+  size_t ledCounts[LED_CNT_RES_TEST_COUNT] = {1000, -1, -100, 1001};
+
+  for(uint8_t i = 0; i < LED_CNT_RES_TEST_COUNT; ++i)
+  {
+    ledCtrlGetRpmChaserPxlCnt_fake.return_val = ledCounts[i];
+
+    zassert_equal(failRet, generateLedCountResponse(buffer,
+      SIMHUB_LED_CNT_RES_SIZE));
+    zassert_equal(1, ledCtrlGetRpmChaserPxlCnt_fake.call_count);
+
+    RESET_FAKE(ledCtrlGetRpmChaserPxlCnt);
+  }
+}
+
+/**
+ * @test  generateLedCountResponse must return the success code and the fully
+ *        generated response packet.
+*/
+ZTEST(simhubPkt_suite, test_generateLedCountResponse_Success)
+{
+  bool resIsComp = false;
+  int successRets[SIMHUB_LED_CNT_RES_SIZE] = {3, 4, 5, 5};
+  uint8_t buffer[SIMHUB_LED_CNT_RES_SIZE] = {0};
+  size_t ledCounts[LED_CNT_RES_TEST_COUNT] = {0, 12, 129, 999};
+  uint8_t expectedRes[LED_CNT_RES_TEST_COUNT][SIMHUB_LED_CNT_RES_SIZE] =
+    {{'0', '\r', '\n'},
+     {'1', '2', '\r', '\n'},
+     {'1', '1', '9', '\r', '\n'},
+     {'9', '9', '9', '\r', '\n'}};
+
+  for(uint8_t i = 0; i < LED_CNT_RES_TEST_COUNT; ++i)
+  {
+    ledCtrlGetRpmChaserPxlCnt_fake.return_val = ledCounts[i];
+
+    zassert_equal(successRets[i], generateLedCountResponse(buffer,
+      SIMHUB_LED_CNT_RES_SIZE));
+    zassert_equal(1, ledCtrlGetRpmChaserPxlCnt_fake.call_count);
+
+    for(uint8_t j = 0; j < SIMHUB_LED_CNT_RES_SIZE && !resIsComp; ++j)
+    {
+      zassert_equal(expectedRes[i][j], buffer[j]);
+      if(buffer[j] == 0)
+        resIsComp = true;
+    }
+
+    RESET_FAKE(ledCtrlGetRpmChaserPxlCnt);
+  }
+}
+
 /**
  * @test  simhubPktInitBuffer must initialize the Rx and Tx ring
  *        internal buffer.

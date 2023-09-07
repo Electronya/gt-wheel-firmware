@@ -20,6 +20,8 @@
 #include "ledCtrl.h"
 #include "zephyrRingBuffer.h"
 
+#include <stdio.h>
+
 /**
  * @brief ACM device module name.
 */
@@ -52,6 +54,11 @@ LOG_MODULE_DECLARE(SIMHUB_PKT_MODULE_NAME);
  * @brief The size of the get LED count payload.
 */
 #define SIMHUB_LED_CNT_PLD_SIZE       5
+
+/**
+ * @brief The size of the get LED count response.
+*/
+#define SIMHUB_LED_CNT_RES_SIZE       (5 + 1)
 
 /**
  * @brief The size LED data packet footer.
@@ -220,6 +227,34 @@ bool IsPacketLedDataType(uint8_t *pktBuf, size_t size)
   return pktIsMatch;
 }
 
+/**
+ * @brief   Generate the response packet for the LED count.
+ *
+ * @param buffer  The output buffer.
+ * @param size    The maximum size of the response.
+ *
+ * @return  The size of the response packet if successful, the error
+ *          code otherwise.
+ */
+int generateLedCountResponse(uint8_t *buffer, size_t size)
+{
+  int rc;
+  uint32_t ledCount = ledCtrlGetRpmChaserPxlCnt();
+
+  if(ledCount < 0 || ledCount > LED_CTRL_MAX_CHASER_PIXEL)
+  {
+    LOG_ERR("to much LED in chaser for the SIMHUB protocol");
+    return -ENOSPC;
+  }
+
+  for(uint8_t i = 0; i < size; ++i)
+    buffer[i] = 0;
+
+  rc = sprintf(buffer, "%d\r\n", ledCount);
+
+  return rc;
+}
+
 void simhubPktInitBuffer(void)
 {
   zephyrRingBufInit(&rxBuffer, SIMHUB_RX_PKT_BUF_SIZE, rxBufData);
@@ -308,7 +343,6 @@ int simhubPktProcessProto(void)
   }
 
   freeSpace = zephyrRingBufGetFreeSpace(&txBuffer);
-  printk("free space: %d\n", freeSpace);
   if(freeSpace < SIMHUB_PROTO_RES_SIZE)
   {
     LOG_ERR("not enough place in Tx buffer for response");
@@ -322,7 +356,8 @@ int simhubPktProcessProto(void)
     return -ENOSPC;
   }
 
-  return 0;
+  return rc;
+}
 }
 
 /** @} */
