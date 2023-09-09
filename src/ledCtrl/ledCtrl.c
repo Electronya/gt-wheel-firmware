@@ -38,6 +38,11 @@
 */
 #define RPM_CHASER_PIXEL_OFFSET       2
 
+/**
+ * @brief The RPM chaser pixel count.
+*/
+#define RPM_CHASER_PIXEL_COUNT        12
+
 /* Setting module logging */
 LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
 
@@ -49,7 +54,7 @@ static ZephyrLedStrip ledStrip = {
   .dataLine = {
     .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(stripdataline), gpios, {0}),
   },
-  .pixelCount = 5,
+  .pixelCount = RPM_CHASER_PIXEL_COUNT,
   .t0h = 300,
   .t0l = 800,
   .t1h = 750,
@@ -59,6 +64,8 @@ static ZephyrLedStrip ledStrip = {
 #else
 static ZephyrLedStrip ledStrip;
 #endif
+
+ZephyrGrbPixel rpmPixels[RPM_CHASER_PIXEL_COUNT];
 
 /**
  * @brief Encoder pixel default color.
@@ -139,12 +146,22 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void)
   return zephyrLedStripUpdate(&ledStrip);
 }
 
-int ledCtrlSetRpmChaserPixels(ZephyrGrbPixel *pixels)
+int ledCtrlSetRpmChaserPixels(uint8_t *pixels, size_t size)
 {
   int rc;
 
+  if(size != RPM_CHASER_PIXEL_COUNT * 3)
+    return -EINVAL;
+
+  for(uint8_t i = 0; i < RPM_CHASER_PIXEL_COUNT; ++i)
+  {
+    rpmPixels[i].r = pixels[i + 0];
+    rpmPixels[i].g = pixels[i + 1];
+    rpmPixels[i].b = pixels[i + 2];
+  }
+
   rc = zephyrLedStripSetGrbPixels(&ledStrip, RPM_CHASER_PIXEL_OFFSET,
-    ledStrip.pixelCount, pixels);
+    ledStrip.pixelCount, rpmPixels);
   if(rc < 0)
     return rc;
 

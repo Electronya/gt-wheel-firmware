@@ -70,11 +70,12 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void);
  *          A call to ledCtrlUpdateStrip must called to push the new colors
  *          to the strip.
  *
- * @param pixels    The pixel colors.
+ * @param simhubPxl The pixel colors (in RGB format).
+ * @param size      The packet size.
  *
  * @return          0 if successful, the error code otherwise.
  */
-int ledCtrlSetRpmChaserPixels(ZephyrGrbPixel *pixels);
+int ledCtrlSetRpmChaserPixels(uint8_t *simhubPxl, size_t size);
 
 #endif    /* LED_CTRL */
 
