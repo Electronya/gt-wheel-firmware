@@ -18,6 +18,7 @@
 
 #include "simhubPkt.h"
 #include "ledCtrl.h"
+#include "zephyrLedStrip.h"
 #include "zephyrRingBuffer.h"
 
 #include <stdio.h>
@@ -396,7 +397,25 @@ int simhubPktProcessLedCount(void)
 
 int simhubPktProcessLedData(void)
 {
-  return 0;
+  int rc;
+  size_t rxPktSize;
+  size_t gotSize;
+  uint8_t buffer[SIMHUB_RX_PKT_BUF_SIZE];
+  size_t ledDataSize = ledCtrlGetRpmChaserPxlCnt() * 3;
+
+  rxPktSize = SIMHUB_PKT_HEADER_SIZE + ledDataSize +
+    SIMHUB_LED_DATA_FOOTER_SIZE;
+
+  gotSize = zephyrRingBufGet(&rxBuffer, buffer, rxPktSize);
+  if(gotSize < rxPktSize)
+  {
+    LOG_ERR("unable to get all the LED data");
+    return -ENOSPC;
+  }
+
+  rc = ledCtrlSetRpmChaserPixels(buffer + SIMHUB_PKT_HEADER_SIZE, ledDataSize);
+
+  return rc;
 }
 
 /** @} */
