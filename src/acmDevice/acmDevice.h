@@ -16,6 +16,13 @@
 #ifndef ACM_DEVICE
 #define ACM_DEVICE
 
+/**
+ * @brief   Initialize the ACM device.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+int acmDeviceInit(void);
+
 #endif    /* ACM_DEVICE */
 
 /** @} */

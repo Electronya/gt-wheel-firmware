@@ -25,7 +25,7 @@ tests:
       - CONFIG_ENYA_GPIO=y
       - CONFIG_HEAP_MEM_POOL_SIZE=640
   gt_wheel.acmDevice:
-    platform_allow: qemu_cortex_m0
+    platform_allow: qemu_cortex_m3
     tags: acmDevice
     extra_args: TEST_SUITE=acmDevice
     extra_configs:
