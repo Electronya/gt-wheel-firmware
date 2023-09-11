@@ -74,8 +74,21 @@ static void acmDeviceWorker(void *p1, void *p2, void *p3)
         else
           txResponse = true;
         break;
+      case LED_COUNT_TYPE:
+        rc = simhubPktProcessLedCount();
+        if(rc < 0)
+          LOG_WRN("unable to process LED count packet");
+        else
+          txResponse = true;
+        break;
+      case LED_DATA_TYPE:
+        rc = simhubPktProcessLedData();
+        if(rc < 0)
+          LOG_WRN("unable to process LED data packet");
+        break;
       default:
         LOG_WRN("unsupported packet type");
+        break;
     }
 
     if(txResponse)

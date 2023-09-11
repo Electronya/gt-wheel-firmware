@@ -42,6 +42,8 @@ FAKE_VALUE_FUNC(int, simhubPktBufFinishGetting, size_t);
 FAKE_VALUE_FUNC(bool, simhubPktIsPktAvailable, SimhubPktTypes*);
 FAKE_VALUE_FUNC(int, simhubPktProcessUnlock);
 FAKE_VALUE_FUNC(int, simhubPktProcessProto);
+FAKE_VALUE_FUNC(int, simhubPktProcessLedCount);
+FAKE_VALUE_FUNC(int, simhubPktProcessLedData);
 
 /**
  * @brief The claimed data area address.
@@ -110,6 +112,8 @@ static void acmDeviceCaseSetup(void *f)
   RESET_FAKE(simhubPktIsPktAvailable);
   RESET_FAKE(simhubPktProcessUnlock);
   RESET_FAKE(simhubPktProcessProto);
+  RESET_FAKE(simhubPktProcessLedCount);
+  RESET_FAKE(simhubPktProcessLedData);
 }
 
 ZTEST_SUITE(acmDevice_suite, NULL, acmDeviceSuiteSetup, acmDeviceCaseSetup,
@@ -168,6 +172,32 @@ bool customUlockPacketAvailable(SimhubPktTypes *pktType)
 bool customProtoPacketAvailable(SimhubPktTypes *pktType)
 {
   *pktType = PROTO_TYPE;
+  return true;
+}
+
+/**
+ * @brief   Custom simhubPktIsPktAvailable for LED count packet.
+ *
+ * @param pktType The packet type.
+ *
+ * @return  true when a new packet is available.
+ */
+bool customLedCountPacketAvailable(SimhubPktTypes *pktType)
+{
+  *pktType = LED_COUNT_TYPE;
+  return true;
+}
+
+/**
+ * @brief   Custom simhubPktIsPktAvailable for LED data packet.
+ *
+ * @param pktType The packet type.
+ *
+ * @return  true when a new packet is available.
+ */
+bool customLedDataPacketAvailable(SimhubPktTypes *pktType)
+{
+  *pktType = LED_DATA_TYPE;
   return true;
 }
 
@@ -261,6 +291,72 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_ProtoPacket)
   zassert_equal(TEST_CLAIMED_DATA_SIZE, zephyrAcmWriteRingBuffer_fake.arg2_val);
   zassert_equal(1, zephyrAcmEnableTxIrq_fake.call_count);
   zassert_equal(&acmDev, zephyrAcmEnableTxIrq_fake.arg0_val);
+}
+
+/**
+ * @test  acmDeviceWorker must process any LED count packet and respond
+ *        to it.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceWorker_LedCountPacket)
+{
+  int successRet = 0;
+  size_t byteRcvd = 6;
+
+  simhubPktBufClaimPutting_fake.custom_fake = customClaimPutting;
+  zephyrAcmReadRingBuffer_fake.return_val = byteRcvd;
+  simhubPktBufFinishPutting_fake.return_val = successRet;
+  simhubPktIsPktAvailable_fake.custom_fake = customLedCountPacketAvailable;
+  simhubPktProcessLedCount_fake.return_val = successRet;
+  simhubPktBufClaimGetting_fake.custom_fake = customClaimGetting;
+  zephyrAcmWriteRingBuffer_fake.return_val = successRet;
+
+  acmDeviceWorker(NULL, NULL, NULL);
+  zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
+  zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
+  zassert_equal((uint8_t *)TEST_CLAIMED_AREA_ADDR,
+    zephyrAcmReadRingBuffer_fake.arg1_val);
+  zassert_equal(TEST_CLAIMED_DATA_SIZE, zephyrAcmReadRingBuffer_fake.arg2_val);
+  zassert_equal(1, simhubPktBufFinishPutting_fake.call_count);
+  zassert_equal(byteRcvd, simhubPktBufFinishPutting_fake.arg0_val);
+  zassert_equal(1, simhubPktIsPktAvailable_fake.call_count);
+  zassert_equal(1, simhubPktProcessLedCount_fake.call_count);
+  zassert_equal(1, simhubPktBufClaimGetting_fake.call_count);
+  zassert_equal(1, zephyrAcmWriteRingBuffer_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmWriteRingBuffer_fake.arg0_val);
+  zassert_equal((uint8_t *)(TEST_CLAIMED_AREA_ADDR + 1),
+    zephyrAcmWriteRingBuffer_fake.arg1_val);
+  zassert_equal(TEST_CLAIMED_DATA_SIZE, zephyrAcmWriteRingBuffer_fake.arg2_val);
+  zassert_equal(1, zephyrAcmEnableTxIrq_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmEnableTxIrq_fake.arg0_val);
+}
+
+/**
+ * @test  acmDeviceWorker must process any LED data packet, update and don't
+ *        respond to it.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceWorker_LedDataPacket)
+{
+  int successRet = 0;
+  size_t byteRcvd = 6;
+
+  simhubPktBufClaimPutting_fake.custom_fake = customClaimPutting;
+  zephyrAcmReadRingBuffer_fake.return_val = byteRcvd;
+  simhubPktBufFinishPutting_fake.return_val = successRet;
+  simhubPktIsPktAvailable_fake.custom_fake = customLedDataPacketAvailable;
+  simhubPktProcessLedData_fake.return_val = successRet;
+
+  acmDeviceWorker(NULL, NULL, NULL);
+  zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
+  zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
+  zassert_equal((uint8_t *)TEST_CLAIMED_AREA_ADDR,
+    zephyrAcmReadRingBuffer_fake.arg1_val);
+  zassert_equal(TEST_CLAIMED_DATA_SIZE, zephyrAcmReadRingBuffer_fake.arg2_val);
+  zassert_equal(1, simhubPktBufFinishPutting_fake.call_count);
+  zassert_equal(byteRcvd, simhubPktBufFinishPutting_fake.arg0_val);
+  zassert_equal(1, simhubPktIsPktAvailable_fake.call_count);
+  zassert_equal(1, simhubPktProcessLedData_fake.call_count);
 }
 
 /**
