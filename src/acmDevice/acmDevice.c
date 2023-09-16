@@ -21,7 +21,8 @@
 #include "simhubPkt.h"
 #include "zephyrACM.h"
 #include "zephyrCommon.h"
-#include "zephyrThread.h"
+#include "zephyrWork.h"
+#include "zephyrWorkQueue.h"
 
 /**
  * @brief ACM device module name.
@@ -31,19 +32,34 @@
 /* Setting module logging */
 LOG_MODULE_REGISTER(ACM_DEVICE_MODULE_NAME);
 
+/* Creating the worker stack */
+K_THREAD_STACK_DEFINE(acmWorkerStack, 128);
+
 /**
  * @brief The ACM device.
 */
 ZephyrACM acmDev;
 
 /**
+ * @brief The work queue.
+*/
+ZephyrWorkQueue workQueue = {
+  .priority = 3,
+  .stack = acmWorkerStack,
+  .stackSize = K_THREAD_STACK_SIZEOF(acmWorkerStack),
+};
+
+/**
+ * @brief The work.
+*/
+ZephyrWork work;
+
+/**
  * @brief   The ACM worker thread.
  *
- * @param p1  The first user parameter.
- * @param p2  The second user parameter.
- * @param p3  The third user parameter.
+ * @param item  The work item.
  */
-static void acmDeviceWorker(void *p1, void *p2, void *p3)
+static void acmDeviceWorker(struct k_work *item)
 {
   int rc;
   bool txResponse = false;
@@ -112,7 +128,32 @@ static void acmDeviceWorker(void *p1, void *p2, void *p3)
  */
 static void acmDeviceIrq(const struct device *dev, void *usrData)
 {
+  int rc;
 
+  if(zephyrAcmIrqUpdate(&acmDev) && zephyrAcmIsIrqPending(&acmDev))
+  {
+    if(zephyrAcmIsRxIrqReady(&acmDev))
+    {
+      rc = zephyrAcmReadFifo(&acmDev);
+      if(rc < 0)
+        LOG_ERR("unable to read ACM device FIFO");
+
+      rc =zephyrWorkSubmitToQueue(&workQueue, &work);
+      if(rc < 0)
+        LOG_ERR("unable to submit work for processing");
+      if(rc == 0)
+        LOG_WRN("previous processing is still queued");
+    }
+
+    if(zephyrAcmIsTxIrqReady(&acmDev))
+    {
+      rc = zephyrAcmWriteFifo(&acmDev);
+      if(rc < 0)
+        LOG_ERR("unable to write to ACM device FIFO");
+      if(rc == 0)
+        zephyrAcmDisableTxIrq(&acmDev);
+    }
+  }
 }
 
 /**
@@ -133,6 +174,10 @@ int acmDeviceInit(void)
   }
 
   simhubPktInitBuffer();
+
+  work.handler = acmDeviceWorker;
+  zephyrWorkInit(&work);
+  zephyrWorkQueueInit(&workQueue);
 
   zephyrAcmEnableRxIrq(&acmDev);
 

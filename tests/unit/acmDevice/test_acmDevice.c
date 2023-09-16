@@ -23,7 +23,8 @@
 
 #include "simhubPkt.h"
 #include "zephyrACM.h"
-#include "zephyrThread.h"
+#include "zephyrWork.h"
+#include "zephyrWorkQueue.h"
 
 DEFINE_FFF_GLOBALS;
 
@@ -31,8 +32,20 @@ DEFINE_FFF_GLOBALS;
 FAKE_VALUE_FUNC(int, zephyrAcmInit, ZephyrACM*, size_t, size_t);
 FAKE_VOID_FUNC(zephyrAcmEnableRxIrq, ZephyrACM*);
 FAKE_VOID_FUNC(zephyrAcmEnableTxIrq, ZephyrACM*);
+FAKE_VOID_FUNC(zephyrAcmDisableTxIrq, ZephyrACM*);
+FAKE_VALUE_FUNC(int, zephyrAcmIrqUpdate, ZephyrACM*);
+FAKE_VALUE_FUNC(int, zephyrAcmIsIrqPending, ZephyrACM*);
+FAKE_VALUE_FUNC(int, zephyrAcmIsRxIrqReady, ZephyrACM*);
+FAKE_VALUE_FUNC(int, zephyrAcmIsTxIrqReady, ZephyrACM*);
+FAKE_VALUE_FUNC(int, zephyrAcmReadFifo, ZephyrACM*);
+FAKE_VALUE_FUNC(int, zephyrAcmWriteFifo, ZephyrACM*);
 FAKE_VALUE_FUNC(int, zephyrAcmReadRingBuffer, ZephyrACM*, uint8_t*, size_t);
 FAKE_VALUE_FUNC(int, zephyrAcmWriteRingBuffer, ZephyrACM*, uint8_t*, size_t);
+
+FAKE_VOID_FUNC(zephyrWorkInit, ZephyrWork*);
+FAKE_VALUE_FUNC(int, zephyrWorkSubmitToQueue, ZephyrWorkQueue*, ZephyrWork*);
+
+FAKE_VOID_FUNC(zephyrWorkQueueInit, ZephyrWorkQueue*);
 
 FAKE_VOID_FUNC(simhubPktInitBuffer);
 FAKE_VALUE_FUNC(size_t, simhubPktBufClaimPutting, uint8_t**, size_t);
@@ -102,8 +115,18 @@ static void acmDeviceCaseSetup(void *f)
   RESET_FAKE(zephyrAcmInit);
   RESET_FAKE(zephyrAcmEnableRxIrq);
   RESET_FAKE(zephyrAcmEnableTxIrq);
+  RESET_FAKE(zephyrAcmDisableTxIrq);
+  RESET_FAKE(zephyrAcmIrqUpdate);
+  RESET_FAKE(zephyrAcmIsIrqPending);
+  RESET_FAKE(zephyrAcmIsRxIrqReady);
+  RESET_FAKE(zephyrAcmIsTxIrqReady);
+  RESET_FAKE(zephyrAcmReadFifo);
+  RESET_FAKE(zephyrAcmWriteFifo);
   RESET_FAKE(zephyrAcmReadRingBuffer);
   RESET_FAKE(zephyrAcmWriteRingBuffer);
+  RESET_FAKE(zephyrWorkInit);
+  RESET_FAKE(zephyrWorkSubmitToQueue);
+  RESET_FAKE(zephyrWorkQueueInit);
   RESET_FAKE(simhubPktInitBuffer);
   RESET_FAKE(simhubPktBufClaimPutting);
   RESET_FAKE(simhubPktBufFinishPutting);
@@ -215,7 +238,7 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_IncompletePacket)
   simhubPktBufFinishPutting_fake.return_val = successRet;
   simhubPktIsPktAvailable_fake.return_val = false;
 
-  acmDeviceWorker(NULL, NULL, NULL);
+  acmDeviceWorker(NULL);
   zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
   zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
   zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
@@ -242,7 +265,7 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_UnlockPacket)
   simhubPktIsPktAvailable_fake.custom_fake = customUlockPacketAvailable;
   simhubPktProcessUnlock_fake.return_val = successRet;
 
-  acmDeviceWorker(NULL, NULL, NULL);
+  acmDeviceWorker(NULL);
   zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
   zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
   zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
@@ -272,7 +295,7 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_ProtoPacket)
   simhubPktBufClaimGetting_fake.custom_fake = customClaimGetting;
   zephyrAcmWriteRingBuffer_fake.return_val = successRet;
 
-  acmDeviceWorker(NULL, NULL, NULL);
+  acmDeviceWorker(NULL);
   zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
   zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
   zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
@@ -310,7 +333,7 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_LedCountPacket)
   simhubPktBufClaimGetting_fake.custom_fake = customClaimGetting;
   zephyrAcmWriteRingBuffer_fake.return_val = successRet;
 
-  acmDeviceWorker(NULL, NULL, NULL);
+  acmDeviceWorker(NULL);
   zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
   zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
   zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
@@ -346,7 +369,7 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_LedDataPacket)
   simhubPktIsPktAvailable_fake.custom_fake = customLedDataPacketAvailable;
   simhubPktProcessLedData_fake.return_val = successRet;
 
-  acmDeviceWorker(NULL, NULL, NULL);
+  acmDeviceWorker(NULL);
   zassert_equal(1, simhubPktBufClaimPutting_fake.call_count);
   zassert_equal(1, zephyrAcmReadRingBuffer_fake.call_count);
   zassert_equal(&acmDev, zephyrAcmReadRingBuffer_fake.arg0_val);
@@ -357,6 +380,167 @@ ZTEST(acmDevice_suite, test_acmDeviceWorker_LedDataPacket)
   zassert_equal(byteRcvd, simhubPktBufFinishPutting_fake.arg0_val);
   zassert_equal(1, simhubPktIsPktAvailable_fake.call_count);
   zassert_equal(1, simhubPktProcessLedData_fake.call_count);
+}
+
+#define ACM_DEV_IRQ_TEST_COUNT        2
+/**
+ * @test  acmDeviceIrq must do nothing if updating the IRQ fails.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceIrq_IrqUpdateFail)
+{
+  int failRet = -ENOSYS;
+
+  zephyrAcmIrqUpdate_fake.return_val = failRet;
+
+  acmDeviceIrq(NULL, NULL);
+
+  zassert_equal(1, zephyrAcmIrqUpdate_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmIrqUpdate_fake.arg0_val);
+}
+
+/**
+ * @test  acmDeviceIrq must do nothing if there is pending IRQ or the
+ *        check fails.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceIrq_NoIrqPendingOrFail)
+{
+  int updateRet = 1;
+  int pendingRets[ACM_DEV_IRQ_TEST_COUNT] = {-ENOSYS, 0};
+
+  for(uint8_t i = 0; i < ACM_DEV_IRQ_TEST_COUNT; ++i)
+  {
+    zephyrAcmIrqUpdate_fake.return_val = updateRet;
+    zephyrAcmIsIrqPending_fake.return_val = pendingRets[i];
+
+    acmDeviceIrq(NULL, NULL);
+
+    zassert_equal(1, zephyrAcmIrqUpdate_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIrqUpdate_fake.arg0_val);
+    zassert_equal(1, zephyrAcmIsIrqPending_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIsIrqPending_fake.arg0_val);
+
+    RESET_FAKE(zephyrAcmIrqUpdate);
+    RESET_FAKE(zephyrAcmIsIrqPending);
+  }
+}
+
+/**
+ * @test  acmDeviceIrq must do nothing if the check for both the Rx and Tx IRQ
+ *        are not ready of fails.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceIrq_NotReadyOrFail)
+{
+  int pendingRet = 1;
+  int rxReadyRets[ACM_DEV_IRQ_TEST_COUNT] = {-ENOSYS, 0};
+  int txReadyRets[ACM_DEV_IRQ_TEST_COUNT] = {0, -ENOSYS};
+
+  for(uint8_t i = 0; i < ACM_DEV_IRQ_TEST_COUNT; ++i)
+  {
+    zephyrAcmIrqUpdate_fake.return_val = pendingRet;
+    zephyrAcmIsIrqPending_fake.return_val = pendingRet;
+    zephyrAcmIsRxIrqReady_fake.return_val = rxReadyRets[i];
+    zephyrAcmIsTxIrqReady_fake.return_val = txReadyRets[i];
+
+    acmDeviceIrq(NULL, NULL);
+
+    zassert_equal(1, zephyrAcmIrqUpdate_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIrqUpdate_fake.arg0_val);
+    zassert_equal(1, zephyrAcmIsIrqPending_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIsIrqPending_fake.arg0_val);
+    zassert_equal(1, zephyrAcmIsRxIrqReady_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIsRxIrqReady_fake.arg0_val);
+    zassert_equal(1, zephyrAcmIsTxIrqReady_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIsTxIrqReady_fake.arg0_val);
+
+    RESET_FAKE(zephyrAcmIrqUpdate);
+    RESET_FAKE(zephyrAcmIsIrqPending);
+    RESET_FAKE(zephyrAcmIsRxIrqReady);
+    RESET_FAKE(zephyrAcmIsTxIrqReady);
+  }
+}
+
+/**
+ * @test  acmDeviceIrq must transfer the data from the FIFO to to the Rx ring
+ *        buffer and queue the work to process it as long as there is still a
+ *        Rx interrupt.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceIrq_RxIrq)
+{
+  int pendingRet = 1;
+  int txNotReadyRet = 0;
+  int receivedByteCnt = 8;
+  int workSubmitRet = 1;
+
+  zephyrAcmIrqUpdate_fake.return_val = pendingRet;
+  zephyrAcmIsIrqPending_fake.return_val = pendingRet;
+  zephyrAcmIsRxIrqReady_fake.return_val = pendingRet;
+  zephyrAcmReadFifo_fake.return_val = receivedByteCnt;
+  zephyrWorkSubmitToQueue_fake.return_val = workSubmitRet;
+  zephyrAcmIsTxIrqReady_fake.return_val = txNotReadyRet;
+
+  acmDeviceIrq(NULL, NULL);
+
+  zassert_equal(1, zephyrAcmIrqUpdate_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmIrqUpdate_fake.arg0_val);
+  zassert_equal(1, zephyrAcmIsIrqPending_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmIsIrqPending_fake.arg0_val);
+  zassert_equal(1, zephyrAcmIsRxIrqReady_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmIsRxIrqReady_fake.arg0_val);
+  zassert_equal(1, zephyrAcmReadFifo_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmReadFifo_fake.arg0_val);
+  zassert_equal(1, zephyrWorkSubmitToQueue_fake.call_count);
+  zassert_equal(&workQueue, zephyrWorkSubmitToQueue_fake.arg0_val);
+  zassert_equal(&work, zephyrWorkSubmitToQueue_fake.arg1_val);
+  zassert_equal(1, zephyrAcmIsTxIrqReady_fake.call_count);
+  zassert_equal(&acmDev, zephyrAcmIsTxIrqReady_fake.arg0_val);
+}
+
+#define ACM_DEV_TX_IRQ_TEST_CNT       2
+/**
+ * @test  acmDeviceIrq must write the response to the Tx FIFO and disable the
+ *        Tx IRQ once all data is transferred.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceIrq_TxIrq)
+{
+  int pendingRet = 1;
+  int rxNotReadyRet = 0;
+  int transmittedByteCnts[ACM_DEV_TX_IRQ_TEST_CNT] = {8, 0};
+
+  for(uint8_t i = 0; i < ACM_DEV_TX_IRQ_TEST_CNT; ++i)
+  {
+    zephyrAcmIrqUpdate_fake.return_val = pendingRet;
+    zephyrAcmIsIrqPending_fake.return_val = pendingRet;
+    zephyrAcmIsRxIrqReady_fake.return_val = rxNotReadyRet;
+    zephyrAcmIsTxIrqReady_fake.return_val = pendingRet;
+    zephyrAcmWriteFifo_fake.return_val = transmittedByteCnts[i];
+
+    acmDeviceIrq(NULL, NULL);
+
+    zassert_equal(1, zephyrAcmIrqUpdate_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIrqUpdate_fake.arg0_val);
+    zassert_equal(1, zephyrAcmIsIrqPending_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIsIrqPending_fake.arg0_val);
+    zassert_equal(1, zephyrAcmIsTxIrqReady_fake.call_count);
+    zassert_equal(&acmDev, zephyrAcmIsTxIrqReady_fake.arg0_val);
+
+    if(transmittedByteCnts[i] != 0)
+    {
+      zassert_equal(1, zephyrAcmWriteFifo_fake.call_count);
+      zassert_equal(&acmDev, zephyrAcmWriteFifo_fake.arg0_val);
+    }
+    else
+    {
+      zassert_equal(1, zephyrAcmDisableTxIrq_fake.call_count);
+      zassert_equal(&acmDev, zephyrAcmDisableTxIrq_fake.arg0_val);
+    }
+
+    RESET_FAKE(zephyrAcmIrqUpdate);
+    RESET_FAKE(zephyrAcmIsIrqPending);
+    RESET_FAKE(zephyrAcmIsRxIrqReady);
+    RESET_FAKE(zephyrAcmIsTxIrqReady);
+    RESET_FAKE(zephyrAcmWriteFifo);
+    RESET_FAKE(zephyrAcmDisableTxIrq);
+  }
 }
 
 /**
@@ -378,8 +562,8 @@ ZTEST(acmDevice_suite, test_acmDeviceInit_AcmInitFail)
 
 /**
  * @test  acmDeviceInit must return the success code when initializing the ACM
- *        device, initializing the SIMHUB packet buffers and enabling the ACM
- *        Rx interrupt succeed.
+ *        device, initializing the SIMHUB packet buffers, enabling the ACM
+ *        Rx interrupt and initialization the work queue succeed.
 */
 ZTEST(acmDevice_suite, test_acmDeviceInit_Success)
 {
@@ -392,6 +576,11 @@ ZTEST(acmDevice_suite, test_acmDeviceInit_Success)
   zassert_equal(&acmDev, zephyrAcmInit_fake.arg0_val);
   zassert_equal(128, zephyrAcmInit_fake.arg1_val);
   zassert_equal(24, zephyrAcmInit_fake.arg2_val);
+  zassert_equal(1, zephyrWorkInit_fake.call_count);
+  zassert_equal(&work, zephyrWorkInit_fake.arg0_val);
+  zassert_equal(acmDeviceWorker, work.handler);
+  zassert_equal(1, zephyrWorkQueueInit_fake.call_count);
+  zassert_equal(&workQueue, zephyrWorkQueueInit_fake.arg0_val);
   zassert_equal(1, simhubPktInitBuffer_fake.call_count);
   zassert_equal(1, zephyrAcmEnableRxIrq_fake.call_count);
 }
