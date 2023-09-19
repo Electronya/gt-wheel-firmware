@@ -28,7 +28,7 @@ LOG_MODULE_REGISTER(HID_DEVICE_MODULE_NAME);
 
 int hidDeviceInit(void)
 {
-
+  return 0;
 }
 
 /** @} */
