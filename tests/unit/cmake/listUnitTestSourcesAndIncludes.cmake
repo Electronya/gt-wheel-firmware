@@ -21,6 +21,12 @@ macro(getFileListForSuite sourceList includeList)
     listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
   endif()
 
+  if(TEST_SUITE STREQUAL "hidDevice")
+    listSources(${CMAKE_CURRENT_SOURCE_DIR}/hidDevice testSrc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/hidDevice testInc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
+  endif()
+
   # message("testSrc: ${testSrc}")
   # message("testInc: ${testInc}")
   # message("modSrc: ${modSrc}")
