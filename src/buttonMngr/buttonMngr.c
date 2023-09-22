@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2023 by Electronya
  *
- * @file      buttonMngr.h
+ * @file      buttonMngr.c
  * @author    jbacon
  * @date      2023-07-31
  * @brief     Button Manager Module
@@ -25,7 +25,7 @@
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /* Setting module logging */
-LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
+LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
 
 /**
  * @brief The thread stack size.

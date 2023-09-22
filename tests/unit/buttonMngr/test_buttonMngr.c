@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2023 by Electronya
  *
- * @file      test_ledCtrl.h
+ * @file      test_ledCtrl.c
  * @author    jbacon
  * @date      2023-07-19
  * @brief     Led Control Module Test Cases
