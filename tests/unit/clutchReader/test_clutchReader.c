@@ -52,12 +52,79 @@ static void clutchReaderCaseSetup(void *f)
 ZTEST_SUITE(clutchReader_suite, NULL, NULL, clutchReaderCaseSetup, NULL, NULL);
 
 /**
+ * @brief The zephyrAdcInit custom fake for fails.
+*/
+int customZephyrAdcInitFail(ZephyrAdcChanConfig *configs, size_t configCount,
+                            ZephyrAdcRes res, uint32_t vdd)
+{
+  zassert_equal(2, configCount);
+  zassert_equal(ADC_12BITS_RES, res);
+  zassert_equal(3300, vdd);
+
+  for(uint8_t i = 0; i < configCount; ++i)
+  {
+    zassert_equal(i, configs[i].id);
+    zassert_equal(ADC_UNIT_GAIN, configs[i].gain);
+    zassert_equal(ADC_ACQ_56_CYCLES, configs[i].acqTime);
+    zassert_equal(ADC_VDD_REF, configs[i].ref);
+  }
+
+  return -ENODEV;
+}
+
+/**
+ * @brief The zephyrAdcInit custom fake for success.
+*/
+int customZephyrAdcInitSuccess(ZephyrAdcChanConfig *configs, size_t configCount,
+                               ZephyrAdcRes res, uint32_t vdd)
+{
+  zassert_equal(2, configCount);
+  zassert_equal(ADC_12BITS_RES, res);
+  zassert_equal(3300, vdd);
+
+  for(uint8_t i = 0; i < configCount; ++i)
+  {
+    zassert_equal(i, configs[i].id);
+    zassert_equal(ADC_UNIT_GAIN, configs[i].gain);
+    zassert_equal(ADC_ACQ_56_CYCLES, configs[i].acqTime);
+    zassert_equal(ADC_VDD_REF, configs[i].ref);
+  }
+
+  return 0;
+}
+
+/**
  * @test  clutchReaderInit must return the error code when initializing the
  *        clutch ADC and its channels fails.
 */
 ZTEST(clutchReader_suite, test_clutchReaderInit_AdcInitFail)
 {
+  int failRet = -ENODEV;
 
+  zephyrAdcInit_fake.custom_fake = customZephyrAdcInitFail;
+
+  zassert_equal(failRet, clutchReaderInit());
+  zassert_equal(1, zephyrAdcInit_fake.call_count);
+}
+
+/**
+ * @test  clutchReaderInit must return the success code when initializing the
+ *        ADC and the reading thread succeeds.
+*/
+ZTEST(clutchReader_suite, test_clutchReaderInit_AdcInitSuccess)
+{
+  int successRet = 0;
+
+  zephyrAdcInit_fake.custom_fake = customZephyrAdcInitSuccess;
+
+  zassert_equal(successRet, clutchReaderInit());
+  zassert_equal(1, zephyrAdcInit_fake.call_count);
+  zassert_equal(1, zephyrThreadCreate_fake.call_count);
+  zassert_equal(&thread, zephyrThreadCreate_fake.arg0_val);
+  zassert_equal(CLUTCH_READER_THREAD_NAME, zephyrThreadCreate_fake.arg1_val);
+  zassert_equal(ZEPHYR_TIME_NO_WAIT, zephyrThreadCreate_fake.arg2_val);
+  zassert_equal(MILLI_SEC, zephyrThreadCreate_fake.arg3_val);
+  zassert_equal(clutchReaderThread, thread.entry);
 }
 
 /** @} */
