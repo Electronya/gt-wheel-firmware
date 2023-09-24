@@ -22,6 +22,8 @@
 
 #define LED_CTRL_MODULE_NAME led_ctrl_module
 
+/* Setting module logging */
+LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
 
 /**
  * @brief The right encoder pixel index.
@@ -37,9 +39,6 @@
  * @brief The RPM chaser pixel offset.
 */
 #define RPM_CHASER_PIXEL_OFFSET       2
-
-/* Setting module logging */
-LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 
 #ifndef CONFIG_ZTEST
 static ZephyrLedStrip ledStrip = {

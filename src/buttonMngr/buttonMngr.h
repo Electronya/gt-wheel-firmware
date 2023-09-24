@@ -8,7 +8,7 @@
  *
  *            This file is the declaration of the button manager module.
  *
- * @defgroup  buttonMngr
+ * @defgroup  buttonMngr button-manager
  *
  * @{
  */
