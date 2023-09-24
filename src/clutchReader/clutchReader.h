@@ -23,6 +23,13 @@
  */
 int clutchReaderInit(void);
 
+/**
+ * @brief   Get the clutch state.
+ *
+ * @return  The clutch state.
+ */
+uint8_t clutchReaderGetState(void);
+
 #endif    /* CLUTCH_READER */
 
 /** @} */

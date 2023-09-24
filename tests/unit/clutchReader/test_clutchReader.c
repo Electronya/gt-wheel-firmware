@@ -191,4 +191,20 @@ ZTEST(clutchReader_suite, test_clutchReaderInit_AdcInitSuccess)
   zassert_equal(clutchReaderThread, thread.entry);
 }
 
+#define CLUTCH_GET_STATE_TEST_CNT         3
+/**
+ * @test  clutchReaderGetState must return the current clutch state.
+*/
+ZTEST(clutchReader_suite, test_clutchReaderGetState_ClutchState)
+{
+  uint8_t states[CLUTCH_GET_STATE_TEST_CNT] = {255, 127, 0};
+
+  for(uint8_t i = 0; i < CLUTCH_GET_STATE_TEST_CNT; ++i)
+  {
+    clutchState = states[i];
+
+    zassert_equal(states[i], clutchReaderGetState());
+  }
+}
+
 /** @} */

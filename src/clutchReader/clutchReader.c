@@ -190,4 +190,9 @@ int clutchReaderInit(void)
   return rc;
 }
 
+uint8_t clutchReaderGetState(void)
+{
+  return clutchState;
+}
+
 /** @} */
