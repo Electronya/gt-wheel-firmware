@@ -158,6 +158,8 @@ static void clutchReaderThread(void *p1, void *p2, void *p3)
       return;
 
     clutchState = calculateClutchState(rawValues, frictionPoint);
+
+    zephyrThreadSleepMs(100);
   }
 }
 
