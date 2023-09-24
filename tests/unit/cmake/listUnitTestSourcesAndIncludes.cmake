@@ -21,10 +21,15 @@ macro(getFileListForSuite sourceList includeList)
     listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
   endif()
 
+  if(TEST_SUITE STREQUAL "clutchReader")
+    listSources(${CMAKE_CURRENT_SOURCE_DIR}/clutchReader testSrc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/clutchReader testInc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
+  endif()
+
   if(TEST_SUITE STREQUAL "hidDevice")
     listSources(${CMAKE_CURRENT_SOURCE_DIR}/hidDevice testSrc)
     listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/hidDevice testInc)
-    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
   endif()
 
   # message("testSrc: ${testSrc}")

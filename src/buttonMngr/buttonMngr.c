@@ -25,7 +25,7 @@
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /* Setting module logging */
-LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
+LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
 
 /**
  * @brief The thread stack size.
