@@ -23,6 +23,7 @@
 #include "hidDevice.c"
 
 #include "buttonMngr.h"
+#include "clutchReader.h"
 #include "zephyrHID.h"
 #include "zephyrWorkQueue.h"
 #include "zephyrWork.h"
@@ -31,53 +32,51 @@ DEFINE_FFF_GLOBALS;
 
 /* mocks */
 FAKE_VALUE_FUNC(int, zephyrHidInit, ZephyrHID*, uint8_t*);
+FAKE_VALUE_FUNC(int, zephyrHidWriteToEp, ZephyrHID*, uint8_t*, size_t, size_t*);
 
 FAKE_VOID_FUNC(zephyrWorkQueueInit, ZephyrWorkQueue*);
 FAKE_VOID_FUNC(zephyrWorkInit, ZephyrWork*);
 FAKE_VALUE_FUNC(int, zephyrWorkSubmitToQueue, ZephyrWorkQueue*, ZephyrWork*);
 
 FAKE_VALUE_FUNC(int, buttonMngrGetAllStates, WheelButtonState*, size_t);
-
-/**
- * @brief The test fixture.
-*/
-struct hidDevice_suite_fixture
-{
-  WheelButtonState testStates[BUTTON_COUNT];
-};
-
-static void *hidDeviceSuiteSetup(void)
-{
-  struct hidDevice_suite_fixture *fixture =
-    k_malloc(sizeof(struct hidDevice_suite_fixture));
-  zassume_not_null(fixture, NULL);
-
-  return (void *)fixture;
-}
-
-static void hidDeviceSuiteTeardown(void *f)
-{
-  k_free(f);
-}
+FAKE_VALUE_FUNC(uint8_t, clutchReaderGetState);
 
 static void hidDeviceCaseSetup(void *f)
 {
-  // int successRet = 0;
-  struct hidDevice_suite_fixture *fixture =
-    (struct hidDevice_suite_fixture *)f;
-
   for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
-    fixture->testStates[i] = BUTTON_DEPRESSED;
+  {
+    if(i % 2)
+      report[i + HID_RPT_BTN_STATE_OFFSET] = BUTTON_DEPRESSED;
+    else
+      report[i + HID_RPT_BTN_STATE_OFFSET] = BUTTON_PRESSED;
+  }
 
   RESET_FAKE(zephyrHidInit);
+  RESET_FAKE(zephyrHidWriteToEp);
   RESET_FAKE(zephyrWorkQueueInit);
   RESET_FAKE(zephyrWorkInit);
   RESET_FAKE(zephyrWorkSubmitToQueue);
   RESET_FAKE(buttonMngrGetAllStates);
+  RESET_FAKE(clutchReaderGetState);
 }
 
-ZTEST_SUITE(hidDevice_suite, NULL, hidDeviceSuiteSetup, hidDeviceCaseSetup,
-  NULL, hidDeviceSuiteTeardown);
+ZTEST_SUITE(hidDevice_suite, NULL, NULL, hidDeviceCaseSetup, NULL, NULL);
+
+/**
+ * @brief Custom fake for the buttonMngrGetAllStates.
+*/
+int customButtonMngrGetAllStates(WheelButtonState *states, size_t count)
+{
+  for(uint8_t i = 0; i < count; ++i)
+  {
+    if(i % 2)
+      states[i] = BUTTON_PRESSED;
+    else
+      states[i] = BUTTON_DEPRESSED;
+  }
+
+  return 0;
+}
 
 /**
  * @test  hidInIntOp must submit the HID work.
@@ -95,7 +94,7 @@ ZTEST(hidDevice_suite, test_hidInIntOp_SubmitWork)
 }
 
 /**
- * @test  hidWorker must return do nothing more if the operation to get all
+ * @test  hidWorker must do nothing more if the operation to get all
  *        the button states fails.
 */
 ZTEST(hidDevice_suite, test_hidWorker_GetButtonStateFail)
@@ -109,6 +108,40 @@ ZTEST(hidDevice_suite, test_hidWorker_GetButtonStateFail)
   zassert_equal((WheelButtonState *)&report + HID_RPT_BTN_STATE_OFFSET,
     buttonMngrGetAllStates_fake.arg0_val);
   zassert_equal(BUTTON_COUNT, buttonMngrGetAllStates_fake.arg1_val);
+}
+
+/**
+ * @test  hidWorker must update the button and clutch states in the report and
+ *        write it to the EP.
+*/
+ZTEST(hidDevice_suite, test_hidWorker_UpdateStates)
+{
+  int successRet = 0;
+  uint8_t clutchState = 127;
+
+  buttonMngrGetAllStates_fake.custom_fake = customButtonMngrGetAllStates;
+  clutchReaderGetState_fake.return_val = clutchState;
+  zephyrHidWriteToEp_fake.return_val = successRet;
+
+  hidWorker(NULL);
+  zassert_equal(1, buttonMngrGetAllStates_fake.call_count);
+  zassert_equal((WheelButtonState *)&report + HID_RPT_BTN_STATE_OFFSET,
+    buttonMngrGetAllStates_fake.arg0_val);
+  zassert_equal(BUTTON_COUNT, buttonMngrGetAllStates_fake.arg1_val);
+  zassert_equal(1, clutchReaderGetState_fake.call_count);
+  zassert_equal(1, zephyrHidWriteToEp_fake.call_count);
+  zassert_equal(&hidDev, zephyrHidWriteToEp_fake.arg0_val);
+  zassert_equal(report, zephyrHidWriteToEp_fake.arg1_val);
+  zassert_equal(sizeof(report), zephyrHidWriteToEp_fake.arg2_val);
+  zassert_equal(HID_GAMEPAD_REPORT, report[0]);
+  zassert_equal(clutchState, report[1]);
+  for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
+  {
+    if(i % 2)
+      zassert_equal(BUTTON_PRESSED, report[HID_RPT_BTN_STATE_OFFSET + 1]);
+    else
+      zassert_equal(BUTTON_DEPRESSED, report[HID_RPT_BTN_STATE_OFFSET + i]);
+  }
 }
 
 /**

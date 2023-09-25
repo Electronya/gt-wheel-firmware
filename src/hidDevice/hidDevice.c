@@ -19,6 +19,7 @@
 
 #include "hidDevice.h"
 #include "buttonMngr.h"
+#include "clutchReader.h"
 #include "zephyrCommon.h"
 #include "zephyrHID.h"
 #include "zephyrWork.h"
@@ -46,6 +47,11 @@ K_THREAD_STACK_DEFINE(hidWorkerStack, 128);
  * @brief The button states report offset.
 */
 #define HID_RPT_BTN_STATE_OFFSET      2
+
+/**
+ * @brief The clutch state report offset.
+*/
+#define HID_RPT_CLUTCH_STATE_OFFSET   1
 
 /**
  * @brief The HID device work queue.
@@ -131,14 +137,19 @@ static void hidWorker(struct k_work *item)
 
   report[0] = HID_GAMEPAD_REPORT;
 
-  // TODO: read the clutch value.
-
   rc = buttonMngrGetAllStates(repBtnStates, BUTTON_COUNT);
   if(rc < 0)
   {
     LOG_ERR("unable to populate button report with button states");
     return;
   }
+
+  report[HID_RPT_CLUTCH_STATE_OFFSET] = clutchReaderGetState();
+
+  rc = zephyrHidWriteToEp(&hidDev, report, sizeof(report), NULL);
+  if(rc < 0)
+    // TODO: fatal error management.
+    return;
 }
 
 int hidDeviceInit(void)
