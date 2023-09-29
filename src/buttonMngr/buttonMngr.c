@@ -47,10 +47,6 @@ ZephyrGpio rows[BUTTON_ROW_COUNT] = {
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row5), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row6), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row7), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row8), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row9), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row10), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row11), gpios, {0}) },
 };
 
 ZephyrGpio columns[BUTTON_COL_COUNT] = {
@@ -58,9 +54,6 @@ ZephyrGpio columns[BUTTON_COL_COUNT] = {
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col1), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col2), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col3), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col4), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col5), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col6), gpios, {0}) },
 };
 
 ZephyrGpio shifters[BUTTON_SHIFTER_COUNT] = {
@@ -243,8 +236,8 @@ int buttonMngrGetEncoderStates(WheelButtonState *states, size_t count)
   if(count != BUTTON_ENCODER_COUNT)
     return -EINVAL;
 
-  states[0] = buttonStates[LEFT_ENC_MODE_IDX];
-  states[1] = buttonStates[RIGHT_ENC_MODE_IDX];
+  states[0] = buttonStates[LEFT_ENC_BTN_IDX];
+  states[1] = buttonStates[RIGHT_ENC_BTN_IDX];
 
   return 0;
 }

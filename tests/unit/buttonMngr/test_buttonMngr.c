@@ -231,7 +231,7 @@ ZTEST_F(buttonMngr_suite, test_readButtonMatrix_Success)
 
   for(uint8_t i = 0; i < BUTTON_ROW_COUNT * BUTTON_COL_COUNT; ++i)
   {
-    zassert_equal(rows + (i % 12), zephyrGpioRead_fake.arg0_history[i]);
+    zassert_equal(rows + (i % 8), zephyrGpioRead_fake.arg0_history[i]);
     zassert_equal(fixture->readRetVals[i], buttonStates[i]);
   }
 }
@@ -489,7 +489,6 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
     zassert_equal(expectedGpio, zephyrGpioInit_fake.arg0_history[i]);
     zassert_equal(expectedDir, zephyrGpioInit_fake.arg1_history[i]);
   }
-  printk("call count: %d\n", zephyrThreadCreate_fake.call_count);
   zassert_equal(1, zephyrThreadCreate_fake.call_count);
   zassert_equal(&thread, zephyrThreadCreate_fake.arg0_val);
   zassert_equal(BUTTON_MNGR_THREAD_NAME, zephyrThreadCreate_fake.arg1_val);
@@ -553,8 +552,8 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrGetEncoderStates_Success)
 
   zassert_equal(successRet, buttonMngrGetEncoderStates(fixture->buttonStates,
     BUTTON_ENCODER_COUNT));
-  zassert_equal(buttonStates[LEFT_ENC_MODE_IDX], fixture->buttonStates[0]);
-  zassert_equal(buttonStates[RIGHT_ENC_MODE_IDX], fixture->buttonStates[1]);
+  zassert_equal(buttonStates[LEFT_ENC_BTN_IDX], fixture->buttonStates[0]);
+  zassert_equal(buttonStates[RIGHT_ENC_BTN_IDX], fixture->buttonStates[1]);
 }
 
 /** @} */
