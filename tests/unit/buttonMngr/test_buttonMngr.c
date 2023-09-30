@@ -527,33 +527,4 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrGetAllStates_Success)
     zassert_equal(buttonStates[i], fixture->buttonStates[i]);
 }
 
-/**
- * @test  buttonMngrGetEncoderStates must return the error code when requested
- *        encoder button count does not correspond to the actual count.
-*/
-ZTEST_F(buttonMngr_suite, test_buttonMngrGetEncoderStates_BadCount)
-{
-  int failRet = -EINVAL;
-  size_t badCounts[GET_STATE_FAIL_TEST_CNT] = {BUTTON_ENCODER_COUNT - 1,
-                                               BUTTON_ENCODER_COUNT + 1};
-
-  for(uint8_t i = 0; i < GET_STATE_FAIL_TEST_CNT; ++i)
-    zassert_equal(failRet, buttonMngrGetEncoderStates(fixture->buttonStates,
-      badCounts[i]));
-}
-
-/**
- * @test  buttonMngrGetEncoderStates must return the success code and copy the
- *        encoder button states to the provided buffer.
-*/
-ZTEST_F(buttonMngr_suite, test_buttonMngrGetEncoderStates_Success)
-{
-  int successRet = 0;
-
-  zassert_equal(successRet, buttonMngrGetEncoderStates(fixture->buttonStates,
-    BUTTON_ENCODER_COUNT));
-  zassert_equal(buttonStates[LEFT_ENC_BTN_IDX], fixture->buttonStates[0]);
-  zassert_equal(buttonStates[RIGHT_ENC_BTN_IDX], fixture->buttonStates[1]);
-}
-
 /** @} */

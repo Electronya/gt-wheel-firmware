@@ -37,11 +37,6 @@
 #define BUTTON_ROCKER_COUNT     2
 
 /**
- * @brief The encoder button count.
-*/
-#define BUTTON_ENCODER_COUNT    2
-
-/**
  * @brief The button index x(button name, button column, button row).
 */
 #define LIST_BUTTON_IDX   X(TC_ENC_BTN_IDX,       0, 0)     \
@@ -126,18 +121,6 @@ int buttonMngrInit(void);
  * @return  0 if successful, the error code otherwise.
  */
 int buttonMngrGetAllStates(WheelButtonState *states, size_t count);
-
-/**
- * @brief   Get the encoder button states.
- *
- * @param states  The encoder button states.
- * @param count   The count of button states to get.
- *
- * @return  0 if successful, the error code otherwise.
- */
-int buttonMngrGetEncoderStates(WheelButtonState *states, size_t count);
-
-// TODO: implement the thread + mutex.
 
 #endif    /* BUTTON_MNGR */
 

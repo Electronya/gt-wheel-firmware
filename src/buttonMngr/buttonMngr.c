@@ -25,7 +25,7 @@
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /* Setting module logging */
-LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
+LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 
 /**
  * @brief The thread stack size.
@@ -36,6 +36,11 @@ LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
  * @brief The thread name.
  */
 #define BUTTON_MNGR_THREAD_NAME     "buttonMngr"
+
+/**
+ * @brief The encoder signal count.
+*/
+#define BUTTON_MNGR_ENC_SIGNAL_CNT  2
 
 #ifndef CONFIG_ZTEST
 ZephyrGpio rows[BUTTON_ROW_COUNT] = {
@@ -57,19 +62,55 @@ ZephyrGpio columns[BUTTON_COL_COUNT] = {
 };
 
 ZephyrGpio shifters[BUTTON_SHIFTER_COUNT] = {
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(shifterleft), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(shifterright), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_shifter), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_shifter), gpios, {0}) },
 };
 
 ZephyrGpio rockers[BUTTON_ROCKER_COUNT] = {
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(rockerleft), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(rockerright), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_rocker), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_rocker), gpios, {0}) },
+};
+
+ZephyrGpio leftEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_enc_b), gpios, {0}) },
+};
+
+ZephyrGpio rightEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_enc_b), gpios, {0}) },
+};
+
+ZephyrGpio tcEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc_enc_b), gpios, {0}) },
+};
+
+ZephyrGpio tc1Encoder[BUTTON_MNGR_ENC_SIGNAL_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc1_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc1_enc_b), gpios, {0}) },
+};
+
+ZephyrGpio absEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(abs_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(abs_enc_b), gpios, {0}) },
+};
+
+ZephyrGpio mapEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(map_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(map_enc_b), gpios, {0}) },
 };
 #else
 ZephyrGpio rows[BUTTON_ROW_COUNT];
 ZephyrGpio columns[BUTTON_COL_COUNT];
 ZephyrGpio shifters[BUTTON_SHIFTER_COUNT];
 ZephyrGpio rockers[BUTTON_ROCKER_COUNT];
+ZephyrGpio leftEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT];
+ZephyrGpio rightEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT];
+ZephyrGpio tcEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT];
+ZephyrGpio tc1Encoder[BUTTON_MNGR_ENC_SIGNAL_CNT];
+ZephyrGpio absEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT];
+ZephyrGpio mapEncoder[BUTTON_MNGR_ENC_SIGNAL_CNT];
 #endif
 
 K_THREAD_STACK_DEFINE(buttonThreadStack, BUTTON_MNGR_STACK_SIZE);
@@ -227,17 +268,6 @@ int buttonMngrGetAllStates(WheelButtonState *states, size_t count)
     return -EINVAL;
 
   bytecpy(states, buttonStates, count * sizeof(WheelButtonState));
-
-  return 0;
-}
-
-int buttonMngrGetEncoderStates(WheelButtonState *states, size_t count)
-{
-  if(count != BUTTON_ENCODER_COUNT)
-    return -EINVAL;
-
-  states[0] = buttonStates[LEFT_ENC_BTN_IDX];
-  states[1] = buttonStates[RIGHT_ENC_BTN_IDX];
 
   return 0;
 }
