@@ -79,9 +79,25 @@
 
 typedef enum
 {
-  #define X(name, col, row) name = col * BUTTON_ROW_COUNT + row,
-    LIST_BUTTON_IDX
-  #undef X
+#define X(name, col, row) name = col * BUTTON_ROW_COUNT + row,
+  LIST_BUTTON_IDX
+#undef X
+  TC_INC_IDX,
+  TC_DEC_IDX,
+  TC1_INC_IDX,
+  TC1_DEC_IDX,
+  ABS_INC_IDX,
+  ABS_DEC_IDX,
+  MAP_INC_IDX,
+  MAP_DEC_IDX,
+  LEFT_ENC_M1_INC_IDX,
+  LEFT_ENC_M1_DEC_IDX,
+  LEFT_ENC_M2_INC_IDX,
+  LEFT_ENC_M2_DEC_IDX,
+  BB_INC_IDX,
+  BB_DEC_IDX,
+  RIGHT_ENC_M2_INC_IDX,
+  RIGHT_ENC_M2_DEC_IDX,
   BUTTON_COUNT,
 } WheelButtonIdx;
 
