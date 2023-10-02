@@ -43,6 +43,20 @@ LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 #define BUTTON_MNGR_ENC_SIG_CNT     2
 
 /**
+ * @brief The encoder indexes
+*/
+enum
+{
+  LEFT_ENC_IDX = 0,                         /**< The left encoder index. */
+  RIGHT_ENC_TDX,                            /**< The right encoder index. */
+  TC_ENC_IDX,                               /**< The TC encoder index. */
+  TC1_ENC_IDX,                              /**< The TC1 encoder index. */
+  ABS_ENC_IDX,                              /**< The ABS encoder index. */
+  MAP_ENC_IDX,                              /**< The MAP encoder index. */
+  ENCODER_COUNT,                            /**< The total encoder count. */
+};
+
+/**
  * @brief The wheel encoder state.
  */
 typedef enum
@@ -51,6 +65,15 @@ typedef enum
   ENCODER_INCREMENT,                        /**< The encoder increment state. */
   ENCODER_DECREMENT,                        /**< The encoder decrement state. */
 } WheelEncoderState;
+
+/**
+ * @brief The wheel encoder modes.
+*/
+typedef enum
+{
+  ENCODER_MODE_1,                           /**< The encoder mode 1. */
+  ENCODER_MODE_2,                           /**< The encoder mode 2. */
+} WheelEncoderMode;
 
 #ifndef CONFIG_ZTEST
 /**
@@ -171,7 +194,19 @@ static ZephyrThread thread = {
 /**
  * @brief The button states.
 */
-WheelButtonState buttonStates[BUTTON_COUNT];
+static WheelButtonState buttonStates[BUTTON_COUNT];
+
+/**
+ * @brief The encoder modes.
+*/
+static WheelEncoderMode encModes[ENCODER_COUNT] =
+  {ENCODER_MODE_1, ENCODER_MODE_1, ENCODER_MODE_1,
+   ENCODER_MODE_1, ENCODER_MODE_1, ENCODER_MODE_1};
+
+/**
+ * @brief The encoder signal states.
+*/
+static uint8_t encSigStates[ENCODER_COUNT] = {0, 0, 0, 0, 0, 0};
 
 /**
  * @brief   Process encoder signals to get its state.
@@ -210,12 +245,25 @@ static WheelEncoderState processEncoderIrq(ZephyrGpio *gpios, uint8_t *states)
   return encState;
 }
 
-// static void leftEncoderIrq(const struct device *dev, struct gpio_callback *cb,
-//                            uint32_t pin)
-// {
-  // static ZephyrGpioState states[BUTTON_MNGR_ENC_SIG_CNT];
-  // ZephyrGpioState previousStates[BUTTON_MNGR_ENC_SIG_CNT];
-// }
+/**
+ * @brief   Left encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void leftEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                           uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(leftEncoder, encSigStates + LEFT_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[LEFT_ENC_M1_INC_IDX + encModes[LEFT_ENC_IDX]] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[LEFT_ENC_M1_DEC_IDX + encModes[LEFT_ENC_IDX]] = BUTTON_PRESSED;
+}
 
 /**
  * @brief   Read the button matrix.
