@@ -124,6 +124,91 @@ static void buttonMngrCaseSetup(void *f)
 ZTEST_SUITE(buttonMngr_suite, NULL, buttonMngrSuiteSetup, buttonMngrCaseSetup,
   NULL, buttonMngrSuiteTeardown);
 
+#define ENC_NO_CHANGE_STATE_TEST_CNT        8
+/**
+ * @test  processEncoderIrq must read the current encoder gpio state, determine
+ *        if the encoder is in no change state and return that state.
+*/
+ZTEST(buttonMngr_suite, test_processEncoderIrq_NoChangeState)
+{
+  uint8_t prevStates[ENC_NO_CHANGE_STATE_TEST_CNT] = {0, 3, 1, 2, 1, 2, 0, 3};
+  uint8_t states[ENC_NO_CHANGE_STATE_TEST_CNT] = {0, 12, 5, 9, 6, 10, 3, 15};
+  int gpioStates[ENC_NO_CHANGE_STATE_TEST_CNT][BUTTON_MNGR_ENC_SIG_CNT] =
+    {{GPIO_CLR, GPIO_CLR}, {GPIO_CLR, GPIO_CLR},
+     {GPIO_CLR, GPIO_SET}, {GPIO_CLR, GPIO_SET},
+     {GPIO_SET, GPIO_CLR}, {GPIO_SET, GPIO_CLR},
+     {GPIO_SET, GPIO_SET}, {GPIO_SET, GPIO_SET}};
+
+  for(uint8_t i = 0; i < ENC_NO_CHANGE_STATE_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates[i], BUTTON_MNGR_ENC_SIG_CNT);
+
+    zassert_equal(ENCODER_NO_CHANGE,
+      processEncoderIrq(leftEncoder, prevStates + i));
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(leftEncoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(leftEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(states[i], prevStates[i]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+#define ENC_CHANGE_STATE_TEST_CNT           4
+/**
+ * @test  processEncoderIrq must read the current encoder gpio state, determine
+ *        if the encoder is in incrementing state and return that state.
+*/
+ZTEST(buttonMngr_suite, test_processEncoderIrq_IncrementState)
+{
+  uint8_t prevStates[ENC_CHANGE_STATE_TEST_CNT] = {1, 3, 0, 2};
+  uint8_t states[ENC_CHANGE_STATE_TEST_CNT] = {4, 13, 2, 11};
+  int gpioStates[ENC_CHANGE_STATE_TEST_CNT][BUTTON_MNGR_ENC_SIG_CNT] =
+    {{GPIO_CLR, GPIO_CLR}, {GPIO_CLR, GPIO_SET},
+     {GPIO_SET, GPIO_CLR}, {GPIO_SET, GPIO_SET}};
+
+  for(uint8_t i = 0; i < ENC_CHANGE_STATE_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates[i], BUTTON_MNGR_ENC_SIG_CNT);
+
+    zassert_equal(ENCODER_INCREMENT,
+      processEncoderIrq(leftEncoder, prevStates + i));
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(leftEncoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(leftEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(states[i], prevStates[i]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+/**
+ * @test  processEncoderIrq must read the current encoder gpio state, determine
+ *        if the encoder is in decrementing state and return that state.
+*/
+ZTEST(buttonMngr_suite, test_processEncoderIrq_DecrementState)
+{
+  uint8_t prevStates[ENC_CHANGE_STATE_TEST_CNT] = {2, 0, 3, 1};
+  uint8_t states[ENC_CHANGE_STATE_TEST_CNT] = {8, 1, 14, 7};
+  int gpioStates[ENC_CHANGE_STATE_TEST_CNT][BUTTON_MNGR_ENC_SIG_CNT] =
+    {{GPIO_CLR, GPIO_CLR}, {GPIO_CLR, GPIO_SET},
+     {GPIO_SET, GPIO_CLR}, {GPIO_SET, GPIO_SET}};
+
+  for(uint8_t i = 0; i < ENC_CHANGE_STATE_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates[i], BUTTON_MNGR_ENC_SIG_CNT);
+
+    zassert_equal(ENCODER_DECREMENT,
+      processEncoderIrq(leftEncoder, prevStates + i));
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(leftEncoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(leftEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(states[i], prevStates[i]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
 /**
  * @test  readButtonMatrix must return the error code if any of the set column
  *        operation fails.
