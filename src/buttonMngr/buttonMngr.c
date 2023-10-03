@@ -285,6 +285,26 @@ static void rightEncoderIrq(const struct device *dev, struct gpio_callback *cb,
 }
 
 /**
+ * @brief   TC encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void tcEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                         uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(tcEncoder, encSigStates + TC_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[TC_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[TC_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
  * @brief   Read the button matrix.
  *
  * @return  0 if successful, the error code otherwise.

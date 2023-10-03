@@ -349,6 +349,38 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM2)
   }
 }
 
+/**
+ * @test  tcEncoderIrq must process the let encoder signals and set the
+ *        encoder M1 increment/decrement/no change buttons states when the
+ *        encoder.
+*/
+ZTEST(buttonMngr_suite, test_tcEncoderIrq_ButtonUpdateState)
+{
+  uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
+  int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
+  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
+     {BUTTON_PRESSED, BUTTON_DEPRESSED},
+     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+
+  for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
+
+    buttonStates[TC_INC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[TC_DEC_IDX] = BUTTON_DEPRESSED;
+    encSigStates[TC_ENC_IDX] = prevStates[i];
+
+    tcEncoderIrq(NULL, NULL, 0);
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(tcEncoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(tcEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(expectedStates[i][0], buttonStates[TC_INC_IDX]);
+    zassert_equal(expectedStates[i][1], buttonStates[TC_DEC_IDX]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
 
 /**
  * @test  readButtonMatrix must return the error code if any of the set column
