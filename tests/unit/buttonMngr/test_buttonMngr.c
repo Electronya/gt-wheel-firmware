@@ -351,8 +351,7 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM2)
 
 /**
  * @test  tcEncoderIrq must process the let encoder signals and set the
- *        encoder M1 increment/decrement/no change buttons states when the
- *        encoder.
+ *        encoder increment/decrement/no change buttons states.
 */
 ZTEST(buttonMngr_suite, test_tcEncoderIrq_ButtonUpdateState)
 {
@@ -377,6 +376,102 @@ ZTEST(buttonMngr_suite, test_tcEncoderIrq_ButtonUpdateState)
     zassert_equal(tcEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
     zassert_equal(expectedStates[i][0], buttonStates[TC_INC_IDX]);
     zassert_equal(expectedStates[i][1], buttonStates[TC_DEC_IDX]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+/**
+ * @test  tc1EncoderIrq must process the let encoder signals and set the
+ *        encoder M1 increment/decrement/no change buttons states.
+*/
+ZTEST(buttonMngr_suite, test_tc1EncoderIrq_ButtonUpdateState)
+{
+  uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
+  int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
+  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
+     {BUTTON_PRESSED, BUTTON_DEPRESSED},
+     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+
+  for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
+
+    buttonStates[TC1_INC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[TC1_DEC_IDX] = BUTTON_DEPRESSED;
+    encSigStates[TC1_ENC_IDX] = prevStates[i];
+
+    tc1EncoderIrq(NULL, NULL, 0);
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(tc1Encoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(tc1Encoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(expectedStates[i][0], buttonStates[TC1_INC_IDX]);
+    zassert_equal(expectedStates[i][1], buttonStates[TC1_DEC_IDX]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+/**
+ * @test  absEncoderIrq must process the let encoder signals and set the
+ *        encoder M1 increment/decrement/no change buttons states.
+*/
+ZTEST(buttonMngr_suite, test_absEncoderIrq_ButtonUpdateState)
+{
+  uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
+  int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
+  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
+     {BUTTON_PRESSED, BUTTON_DEPRESSED},
+     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+
+  for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
+
+    buttonStates[ABS_INC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[ABS_DEC_IDX] = BUTTON_DEPRESSED;
+    encSigStates[ABS_ENC_IDX] = prevStates[i];
+
+    absEncoderIrq(NULL, NULL, 0);
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(absEncoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(absEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(expectedStates[i][0], buttonStates[ABS_INC_IDX]);
+    zassert_equal(expectedStates[i][1], buttonStates[ABS_DEC_IDX]);
+
+    RESET_FAKE(zephyrGpioRead);
+  }
+}
+
+/**
+ * @test  mapEncoderIrq must process the let encoder signals and set the
+ *        encoder M1 increment/decrement/no change buttons states.
+*/
+ZTEST(buttonMngr_suite, test_mapEncoderIrq_ButtonUpdateState)
+{
+  uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
+  int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
+  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
+     {BUTTON_PRESSED, BUTTON_DEPRESSED},
+     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+
+  for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
+  {
+    SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
+
+    buttonStates[MAP_INC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[MAP_DEC_IDX] = BUTTON_DEPRESSED;
+    encSigStates[MAP_ENC_IDX] = prevStates[i];
+
+    mapEncoderIrq(NULL, NULL, 0);
+    zassert_equal(2, zephyrGpioRead_fake.call_count);
+    zassert_equal(mapEncoder, zephyrGpioRead_fake.arg0_history[0]);
+    zassert_equal(mapEncoder + 1, zephyrGpioRead_fake.arg0_history[1]);
+    zassert_equal(expectedStates[i][0], buttonStates[MAP_INC_IDX]);
+    zassert_equal(expectedStates[i][1], buttonStates[MAP_DEC_IDX]);
 
     RESET_FAKE(zephyrGpioRead);
   }

@@ -305,6 +305,66 @@ static void tcEncoderIrq(const struct device *dev, struct gpio_callback *cb,
 }
 
 /**
+ * @brief   TC1 encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void tc1EncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                          uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(tc1Encoder, encSigStates + TC1_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[TC1_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[TC1_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   ABS encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void absEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                          uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(absEncoder, encSigStates + ABS_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[ABS_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[ABS_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   MAP encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void mapEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                          uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(mapEncoder, encSigStates + MAP_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[MAP_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[MAP_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
  * @brief   Read the button matrix.
  *
  * @return  0 if successful, the error code otherwise.
