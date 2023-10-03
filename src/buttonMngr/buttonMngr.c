@@ -199,9 +199,8 @@ static WheelButtonState buttonStates[BUTTON_COUNT];
 /**
  * @brief The encoder modes.
 */
-static WheelEncoderMode encModes[ENCODER_COUNT] =
-  {ENCODER_MODE_1, ENCODER_MODE_1, ENCODER_MODE_1,
-   ENCODER_MODE_1, ENCODER_MODE_1, ENCODER_MODE_1};
+static WheelEncoderMode encModes[RIGHT_ENC_IDX + 1] = {ENCODER_MODE_1,
+                                                       ENCODER_MODE_1};
 
 /**
  * @brief The encoder signal states.
@@ -263,6 +262,26 @@ static void leftEncoderIrq(const struct device *dev, struct gpio_callback *cb,
     buttonStates[LEFT_ENC_M1_INC_IDX + encModes[LEFT_ENC_IDX]] = BUTTON_PRESSED;
   else if(state == ENCODER_DECREMENT)
     buttonStates[LEFT_ENC_M1_DEC_IDX + encModes[LEFT_ENC_IDX]] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   Right encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void rightEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                            uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(rightEncoder, encSigStates + RIGHT_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[BB_INC_IDX + encModes[RIGHT_ENC_IDX]] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[BB_DEC_IDX + encModes[RIGHT_ENC_IDX]] = BUTTON_PRESSED;
 }
 
 /**
