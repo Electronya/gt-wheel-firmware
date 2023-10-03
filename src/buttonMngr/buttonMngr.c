@@ -48,7 +48,7 @@ LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 enum
 {
   LEFT_ENC_IDX = 0,                         /**< The left encoder index. */
-  RIGHT_ENC_TDX,                            /**< The right encoder index. */
+  RIGHT_ENC_IDX,                            /**< The right encoder index. */
   TC_ENC_IDX,                               /**< The TC encoder index. */
   TC1_ENC_IDX,                              /**< The TC1 encoder index. */
   ABS_ENC_IDX,                              /**< The ABS encoder index. */
