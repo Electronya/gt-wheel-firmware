@@ -43,6 +43,11 @@ LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 #define BUTTON_MNGR_ENC_SIG_CNT     2
 
 /**
+ * @brief The encoder count.
+*/
+#define BUTTON_MNGR_ENC_COUNT       6
+
+/**
  * @brief The encoder indexes
 */
 enum
@@ -469,6 +474,30 @@ static void buttonMngrThread(void *p1, void *p2, void *p3)
 
     zephyrThreadSleepMs(100);
   }
+}
+
+/**
+ * @brief   Initialize an encoder GPIOs.
+ *
+ * @param encGpio   The encoder GPIO to initialize.
+ * @param callback  The IRQ callback.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+static int initEncoderGpio(ZephyrGpio *encGpio, ZephyrGpioIrqCb callback)
+{
+  int rc;
+
+  rc = zephyrGpioInit(encGpio, GPIO_IN);
+  if(rc < 0)
+    return rc;
+
+  rc = zephyrGpioAddIrqCallback(encGpio, callback);
+  if(rc < 0)
+    return rc;
+
+  rc = zephyrGpioEnableIrq(encGpio, GPIO_IRQ_EDGE_BOTH);
+  return rc;
 }
 
 int buttonMngrInit(void)

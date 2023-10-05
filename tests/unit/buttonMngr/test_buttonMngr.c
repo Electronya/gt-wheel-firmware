@@ -30,6 +30,8 @@ DEFINE_FFF_GLOBALS;
 
 /* mocks */
 FAKE_VALUE_FUNC(int, zephyrGpioInit, ZephyrGpio*, ZephyrGpioDir);
+FAKE_VALUE_FUNC(int, zephyrGpioAddIrqCallback, ZephyrGpio*, ZephyrGpioIrqCb);
+FAKE_VALUE_FUNC(int, zephyrGpioEnableIrq, ZephyrGpio*, ZephyrGpioIrqTrig);
 FAKE_VALUE_FUNC(int, zephyrGpioSet, ZephyrGpio*);
 FAKE_VALUE_FUNC(int, zephyrGpioClear, ZephyrGpio*);
 FAKE_VALUE_FUNC(int, zephyrGpioRead, ZephyrGpio*);
@@ -43,10 +45,15 @@ FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread*, char*, uint32_t,
 #define TOTAL_ROW_COL_COUNT   (BUTTON_ROW_COUNT + BUTTON_COL_COUNT)
 
 /**
+ * @brief The total number of encoder GPIOs.
+*/
+#define TOTAL_ENC_GPIO_CNT    (BUTTON_MNGR_ENC_COUNT * BUTTON_MNGR_ENC_SIG_CNT)
+
+/**
  * @brief The total number of GPIOs.
 */
-#define TOTAL_GPIO_COUNT      TOTAL_ROW_COL_COUNT + BUTTON_SHIFTER_COUNT + \
-                              BUTTON_ROCKER_COUNT
+#define TOTAL_GPIO_COUNT      (TOTAL_ROW_COL_COUNT + BUTTON_SHIFTER_COUNT + \
+                              BUTTON_ROCKER_COUNT + TOTAL_ENC_GPIO_CNT)
 
 /**
  * @brief The test fixture.
@@ -54,6 +61,8 @@ FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread*, char*, uint32_t,
 struct buttonMngr_suite_fixture
 {
   int gpioInitRetVals[TOTAL_GPIO_COUNT];                    /**< GPIO init mock return values. */
+  int gpioAddIrqRetVals[TOTAL_ENC_GPIO_CNT];                /**< GPIO add IRQ mock return values. */
+  int gpioEnIrqRetVals[TOTAL_ENC_GPIO_CNT];                 /**< GPIO enable IRQ mock return values. */
   int colSetRetVals[BUTTON_COL_COUNT];                      /**< Column set return values. */
   int colClearRetVals[BUTTON_COL_COUNT];                    /**< Column clear return values. */
   int readRetVals[BUTTON_ROW_COUNT * BUTTON_COL_COUNT];     /**< Row read return values. */
@@ -82,6 +91,12 @@ static void buttonMngrCaseSetup(void *f)
 
   for(uint8_t i = 0; i < TOTAL_GPIO_COUNT; ++i)
     fixture->gpioInitRetVals[i] = successRet;
+
+  for(uint8_t i = 0; i < TOTAL_ENC_GPIO_CNT; ++i)
+  {
+    fixture->gpioAddIrqRetVals[i] = successRet;
+    fixture->gpioEnIrqRetVals[i] = successRet;
+  }
 
   for(uint8_t i = 0; i < BUTTON_COL_COUNT; ++i)
   {
@@ -117,6 +132,8 @@ static void buttonMngrCaseSetup(void *f)
     encModes[i] = ENCODER_MODE_1;
 
   RESET_FAKE(zephyrGpioInit);
+  RESET_FAKE(zephyrGpioAddIrqCallback);
+  RESET_FAKE(zephyrGpioEnableIrq);
   RESET_FAKE(zephyrGpioSet);
   RESET_FAKE(zephyrGpioClear);
   RESET_FAKE(zephyrGpioRead);
@@ -675,6 +692,82 @@ ZTEST_F(buttonMngr_suite, test_readButtonRockers_Success)
     zassert_equal(fixture->readRetVals[i],
       buttonStates[LEFT_ROCKER_IDX + i]);
   }
+}
+
+#define ENC_GPIO_INIT_OP_CNT            3
+/**
+ * @test  initEncoderGpio must return the error code as soon as initializing
+ *        the encoder GPIO fails.
+*/
+ZTEST(buttonMngr_suite, test_initEncoderGpio_GpioInitFail)
+{
+  int successRet = 0;
+  int failRet = -EIO;
+  int gpioInitRetVals[ENC_GPIO_INIT_OP_CNT] = {failRet, successRet, successRet};
+  int gpioAddIrqRetVals[ENC_GPIO_INIT_OP_CNT] = {successRet, failRet, successRet};
+  int gpioEnIrqRetVals[ENC_GPIO_INIT_OP_CNT] = {successRet, successRet, failRet};
+
+  for(uint8_t i = 0; i < ENC_GPIO_INIT_OP_CNT; ++i)
+  {
+    zephyrGpioInit_fake.return_val = gpioInitRetVals[i];
+    zephyrGpioAddIrqCallback_fake.return_val = gpioAddIrqRetVals[i];
+    zephyrGpioEnableIrq_fake.return_val = gpioEnIrqRetVals[i];
+
+    zassert_equal(failRet, initEncoderGpio(leftEncoder, leftEncoderIrq));
+    zassert_equal(1, zephyrGpioInit_fake.call_count);
+    zassert_equal(leftEncoder, zephyrGpioInit_fake.arg0_val);
+    zassert_equal(GPIO_IN, zephyrGpioInit_fake.arg1_val);
+
+    if(i == 0)
+    {
+      zassert_equal(0, zephyrGpioAddIrqCallback_fake.call_count);
+      zassert_equal(0, zephyrGpioEnableIrq_fake.call_count);
+    }
+    else if(i == 1)
+    {
+      zassert_equal(1, zephyrGpioAddIrqCallback_fake.call_count);
+      zassert_equal(leftEncoder, zephyrGpioAddIrqCallback_fake.arg0_val);
+      zassert_equal(leftEncoderIrq, zephyrGpioAddIrqCallback_fake.arg1_val);
+      zassert_equal(0, zephyrGpioEnableIrq_fake.call_count);
+    }
+    else
+    {
+      zassert_equal(1, zephyrGpioAddIrqCallback_fake.call_count);
+      zassert_equal(leftEncoder, zephyrGpioAddIrqCallback_fake.arg0_val);
+      zassert_equal(leftEncoderIrq, zephyrGpioAddIrqCallback_fake.arg1_val);
+      zassert_equal(1, zephyrGpioEnableIrq_fake.call_count);
+      zassert_equal(leftEncoder, zephyrGpioEnableIrq_fake.arg0_val);
+      zassert_equal(GPIO_IRQ_EDGE_BOTH, zephyrGpioEnableIrq_fake.arg1_val);
+    }
+
+    RESET_FAKE(zephyrGpioInit);
+    RESET_FAKE(zephyrGpioAddIrqCallback);
+    RESET_FAKE(zephyrGpioEnableIrq);
+  }
+}
+
+/**
+ * @test  initEncoderGpio must return the success code when the encoder GPIO
+ *        initialization succeeds.
+*/
+ZTEST(buttonMngr_suite, test_initEncoderGpio_GpioInitSuccess)
+{
+  int successRet = 0;
+
+  zephyrGpioInit_fake.return_val = successRet;
+  zephyrGpioAddIrqCallback_fake.return_val = successRet;
+  zephyrGpioEnableIrq_fake.return_val = successRet;
+
+  zassert_equal(successRet, initEncoderGpio(leftEncoder, leftEncoderIrq));
+  zassert_equal(1, zephyrGpioInit_fake.call_count);
+  zassert_equal(leftEncoder, zephyrGpioInit_fake.arg0_val);
+  zassert_equal(GPIO_IN, zephyrGpioInit_fake.arg1_val);
+  zassert_equal(1, zephyrGpioAddIrqCallback_fake.call_count);
+  zassert_equal(leftEncoder, zephyrGpioAddIrqCallback_fake.arg0_val);
+  zassert_equal(leftEncoderIrq, zephyrGpioAddIrqCallback_fake.arg1_val);
+  zassert_equal(1, zephyrGpioEnableIrq_fake.call_count);
+  zassert_equal(leftEncoder, zephyrGpioEnableIrq_fake.arg0_val);
+  zassert_equal(GPIO_IRQ_EDGE_BOTH, zephyrGpioEnableIrq_fake.arg1_val);
 }
 
 /**
