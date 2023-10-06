@@ -25,7 +25,7 @@
 #define BUTTON_MNGR_MODULE_NAME button_mngr_module
 
 /* Setting module logging */
-LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
+LOG_MODULE_REGISTER(BUTTON_MNGR_MODULE_NAME);
 
 /**
  * @brief The thread stack size.
@@ -37,7 +37,53 @@ LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
  */
 #define BUTTON_MNGR_THREAD_NAME     "buttonMngr"
 
+/**
+ * @brief The encoder signal count.
+*/
+#define BUTTON_MNGR_ENC_SIG_CNT     2
+
+/**
+ * @brief The encoder count.
+*/
+#define BUTTON_MNGR_ENC_COUNT       6
+
+/**
+ * @brief The encoder indexes
+*/
+enum
+{
+  LEFT_ENC_IDX = 0,                         /**< The left encoder index. */
+  RIGHT_ENC_IDX,                            /**< The right encoder index. */
+  TC_ENC_IDX,                               /**< The TC encoder index. */
+  TC1_ENC_IDX,                              /**< The TC1 encoder index. */
+  ABS_ENC_IDX,                              /**< The ABS encoder index. */
+  MAP_ENC_IDX,                              /**< The MAP encoder index. */
+  ENCODER_COUNT,                            /**< The total encoder count. */
+};
+
+/**
+ * @brief The wheel encoder state.
+ */
+typedef enum
+{
+  ENCODER_NO_CHANGE,                        /**< The encoder no change state. */
+  ENCODER_INCREMENT,                        /**< The encoder increment state. */
+  ENCODER_DECREMENT,                        /**< The encoder decrement state. */
+} WheelEncoderState;
+
+/**
+ * @brief The wheel encoder modes.
+*/
+typedef enum
+{
+  ENCODER_MODE_1,                           /**< The encoder mode 1. */
+  ENCODER_MODE_2,                           /**< The encoder mode 2. */
+} WheelEncoderMode;
+
 #ifndef CONFIG_ZTEST
+/**
+ * @brief The button matrix rows.
+*/
 ZephyrGpio rows[BUTTON_ROW_COUNT] = {
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row0), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row1), gpios, {0}) },
@@ -47,39 +93,102 @@ ZephyrGpio rows[BUTTON_ROW_COUNT] = {
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row5), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row6), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row7), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row8), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row9), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row10), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(row11), gpios, {0}) },
 };
 
+/**
+ * @brief The button matrix columns.
+*/
 ZephyrGpio columns[BUTTON_COL_COUNT] = {
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col0), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col1), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col2), gpios, {0}) },
   { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col3), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col4), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col5), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(col6), gpios, {0}) },
 };
 
+/**
+ * @brief The shifter buttons.
+*/
 ZephyrGpio shifters[BUTTON_SHIFTER_COUNT] = {
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(shifterleft), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(shifterright), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_shifter), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_shifter), gpios, {0}) },
 };
 
+/**
+ * @brief The rocker buttons.
+*/
 ZephyrGpio rockers[BUTTON_ROCKER_COUNT] = {
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(rockerleft), gpios, {0}) },
-  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(rockerright), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_rocker), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_rocker), gpios, {0}) },
+};
+
+/**
+ * @brief The left encoder signals.
+*/
+ZephyrGpio leftEncoder[BUTTON_MNGR_ENC_SIG_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(left_enc_b), gpios, {0}) },
+};
+
+/**
+ * @brief The right encoder signals.
+*/
+ZephyrGpio rightEncoder[BUTTON_MNGR_ENC_SIG_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(right_enc_b), gpios, {0}) },
+};
+
+/**
+ * @brief The TC encoder signals.
+*/
+ZephyrGpio tcEncoder[BUTTON_MNGR_ENC_SIG_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc_enc_b), gpios, {0}) },
+};
+
+/**
+ * @brief The TC1 encoder signals.
+*/
+ZephyrGpio tc1Encoder[BUTTON_MNGR_ENC_SIG_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc1_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(tc1_enc_b), gpios, {0}) },
+};
+
+/**
+ * @brief The ABS encoder signals.
+*/
+ZephyrGpio absEncoder[BUTTON_MNGR_ENC_SIG_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(abs_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(abs_enc_b), gpios, {0}) },
+};
+
+/**
+ * @brief The MAP encoder signals.
+*/
+ZephyrGpio mapEncoder[BUTTON_MNGR_ENC_SIG_CNT] = {
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(map_enc_a), gpios, {0}) },
+  { .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(map_enc_b), gpios, {0}) },
 };
 #else
 ZephyrGpio rows[BUTTON_ROW_COUNT];
 ZephyrGpio columns[BUTTON_COL_COUNT];
 ZephyrGpio shifters[BUTTON_SHIFTER_COUNT];
 ZephyrGpio rockers[BUTTON_ROCKER_COUNT];
+ZephyrGpio leftEncoder[BUTTON_MNGR_ENC_SIG_CNT];
+ZephyrGpio rightEncoder[BUTTON_MNGR_ENC_SIG_CNT];
+ZephyrGpio tcEncoder[BUTTON_MNGR_ENC_SIG_CNT];
+ZephyrGpio tc1Encoder[BUTTON_MNGR_ENC_SIG_CNT];
+ZephyrGpio absEncoder[BUTTON_MNGR_ENC_SIG_CNT];
+ZephyrGpio mapEncoder[BUTTON_MNGR_ENC_SIG_CNT];
 #endif
 
+/**
+ * @brief The thread stack.
+*/
 K_THREAD_STACK_DEFINE(buttonThreadStack, BUTTON_MNGR_STACK_SIZE);
+
+/**
+ * @brief The thread.
+*/
 static ZephyrThread thread = {
   .stack = buttonThreadStack,
   .stackSize = BUTTON_MNGR_STACK_SIZE,
@@ -90,7 +199,175 @@ static ZephyrThread thread = {
 /**
  * @brief The button states.
 */
-WheelButtonState buttonStates[BUTTON_COUNT];
+static WheelButtonState buttonStates[BUTTON_COUNT];
+
+/**
+ * @brief The encoder modes.
+*/
+static WheelEncoderMode encModes[RIGHT_ENC_IDX + 1] = {ENCODER_MODE_1,
+                                                       ENCODER_MODE_1};
+
+/**
+ * @brief The encoder signal states.
+*/
+static uint8_t encSigStates[ENCODER_COUNT] = {0, 0, 0, 0, 0, 0};
+
+/**
+ * @brief   Process encoder signals to get its state.
+ *
+ * @param gpios       The encoder GPIO signals.
+ * @param states      The encoder signal states.
+ *
+ * @return  The processed encoder state.
+ */
+static WheelEncoderState processEncoderIrq(ZephyrGpio *gpios, uint8_t *states)
+{
+  ZephyrGpioState gpioState;
+  WheelEncoderState encState;
+  int8_t lookup[] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
+
+  *states = (*states << 2) & 0x0f;
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT; ++i)
+  {
+    gpioState = zephyrGpioRead(gpios + i);
+    if(gpioState < 0)
+      // TODO: fatal error management.
+      LOG_ERR("unable to read encoder GPIO %s", gpios[i].dev.port->name);
+    if(i == 0)
+      *states |= ((uint8_t)gpioState << 1);
+    else
+      *states |= (uint8_t)gpioState;
+  }
+
+  if(lookup[*states] > 0)
+    encState = ENCODER_INCREMENT;
+  else if(lookup[*states] < 0)
+    encState = ENCODER_DECREMENT;
+  else
+    encState = ENCODER_NO_CHANGE;
+
+  return encState;
+}
+
+/**
+ * @brief   Left encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void leftEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                           uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(leftEncoder, encSigStates + LEFT_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[LEFT_ENC_M1_INC_IDX + encModes[LEFT_ENC_IDX]] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[LEFT_ENC_M1_DEC_IDX + encModes[LEFT_ENC_IDX]] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   Right encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void rightEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                            uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(rightEncoder, encSigStates + RIGHT_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[BB_INC_IDX + encModes[RIGHT_ENC_IDX]] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[BB_DEC_IDX + encModes[RIGHT_ENC_IDX]] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   TC encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void tcEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                         uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(tcEncoder, encSigStates + TC_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[TC_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[TC_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   TC1 encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void tc1EncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                          uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(tc1Encoder, encSigStates + TC1_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[TC1_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[TC1_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   ABS encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void absEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                          uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(absEncoder, encSigStates + ABS_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[ABS_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[ABS_DEC_IDX] = BUTTON_PRESSED;
+}
+
+/**
+ * @brief   MAP encoder GPIO IRQ.
+ *
+ * @param dev         The device structure of the GPIO causing the IRQ.
+ * @param cb          The IRQ callback structure.
+ * @param pin         The pin number of the GPIO that triggered the interrupt.
+ */
+static void mapEncoderIrq(const struct device *dev, struct gpio_callback *cb,
+                          uint32_t pin)
+{
+  WheelEncoderState state;
+
+  state = processEncoderIrq(mapEncoder, encSigStates + MAP_ENC_IDX);
+
+  if(state == ENCODER_INCREMENT)
+    buttonStates[MAP_INC_IDX] = BUTTON_PRESSED;
+  else if(state == ENCODER_DECREMENT)
+    buttonStates[MAP_DEC_IDX] = BUTTON_PRESSED;
+}
 
 /**
  * @brief   Read the button matrix.
@@ -199,6 +476,30 @@ static void buttonMngrThread(void *p1, void *p2, void *p3)
   }
 }
 
+/**
+ * @brief   Initialize an encoder GPIOs.
+ *
+ * @param encGpio   The encoder GPIO to initialize.
+ * @param callback  The IRQ callback.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+static int initEncoderGpio(ZephyrGpio *encGpio, ZephyrGpioIrqCb callback)
+{
+  int rc;
+
+  rc = zephyrGpioInit(encGpio, GPIO_IN);
+  if(rc < 0)
+    return rc;
+
+  rc = zephyrGpioAddIrqCallback(encGpio, callback);
+  if(rc < 0)
+    return rc;
+
+  rc = zephyrGpioEnableIrq(encGpio, GPIO_IRQ_EDGE_BOTH);
+  return rc;
+}
+
 int buttonMngrInit(void)
 {
   int rc = 0;
@@ -214,6 +515,24 @@ int buttonMngrInit(void)
 
   for(uint8_t i = 0; i < BUTTON_ROCKER_COUNT && rc == 0; ++i)
     rc = zephyrGpioInit(rockers + i, GPIO_IN);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(leftEncoder + i, leftEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(rightEncoder + i, rightEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(tcEncoder + i, tcEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(tc1Encoder + i, tc1EncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(absEncoder + i, absEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(mapEncoder + i, mapEncoderIrq);
 
   if(rc == 0)
   {
@@ -235,16 +554,8 @@ int buttonMngrGetAllStates(WheelButtonState *states, size_t count)
 
   bytecpy(states, buttonStates, count * sizeof(WheelButtonState));
 
-  return 0;
-}
-
-int buttonMngrGetEncoderStates(WheelButtonState *states, size_t count)
-{
-  if(count != BUTTON_ENCODER_COUNT)
-    return -EINVAL;
-
-  states[0] = buttonStates[LEFT_ENC_MODE_IDX];
-  states[1] = buttonStates[RIGHT_ENC_MODE_IDX];
+  for(uint8_t i = TC_INC_IDX; i < BUTTON_COUNT; ++i)
+    buttonStates[i] = BUTTON_DEPRESSED;
 
   return 0;
 }

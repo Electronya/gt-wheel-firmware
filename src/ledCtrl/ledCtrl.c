@@ -43,10 +43,10 @@ LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
 #ifndef CONFIG_ZTEST
 static ZephyrLedStrip ledStrip = {
   .timingCntr = {
-    .dev = DEVICE_DT_GET(DT_ALIAS(stripcounter)),
+    .dev = DEVICE_DT_GET(DT_ALIAS(strip_counter)),
   },
   .dataLine = {
-    .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(stripdataline), gpios, {0}),
+    .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(strip_data_line), gpios, {0}),
   },
   .pixelCount = 5,
   .t0h = 300,
