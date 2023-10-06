@@ -516,6 +516,24 @@ int buttonMngrInit(void)
   for(uint8_t i = 0; i < BUTTON_ROCKER_COUNT && rc == 0; ++i)
     rc = zephyrGpioInit(rockers + i, GPIO_IN);
 
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(leftEncoder + i, leftEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(rightEncoder + i, rightEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(tcEncoder + i, tcEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(tc1Encoder + i, tc1EncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(absEncoder + i, absEncoderIrq);
+
+  for(uint8_t i = 0; i < BUTTON_MNGR_ENC_SIG_CNT && rc == 0; ++i)
+    rc = initEncoderGpio(mapEncoder + i, mapEncoderIrq);
+
   if(rc == 0)
   {
     thread.entry = buttonMngrThread;
