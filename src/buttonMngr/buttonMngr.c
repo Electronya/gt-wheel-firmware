@@ -554,6 +554,9 @@ int buttonMngrGetAllStates(WheelButtonState *states, size_t count)
 
   bytecpy(states, buttonStates, count * sizeof(WheelButtonState));
 
+  for(uint8_t i = TC_INC_IDX; i < BUTTON_COUNT; ++i)
+    buttonStates[i] = BUTTON_DEPRESSED;
+
   return 0;
 }
 

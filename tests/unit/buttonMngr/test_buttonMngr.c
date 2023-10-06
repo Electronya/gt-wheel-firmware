@@ -1116,7 +1116,6 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
   zassert_equal(TOTAL_GPIO_COUNT, zephyrGpioInit_fake.call_count);
   for(uint8_t i = 0; i < TOTAL_GPIO_COUNT; ++i)
   {
-    printk("test ID: %d\n", i);
     if(i < BUTTON_ROW_COUNT)
     {
       expectedGpio = rows + i;
@@ -1200,18 +1199,25 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrGetAllStates_BadCount)
 }
 
 /**
- * @test  buttonMngrGetAllStates must return the success code and copy the
- *        current button states to the provided buffer.
+ * @test  buttonMngrGetAllStates must return the success code, copy the
+ *        current button states to the provided buffer and reset the all
+ *        encoder states.
 */
 ZTEST_F(buttonMngr_suite, test_buttonMngrGetAllStates_Success)
 {
   int successRet = 0;
+  WheelButtonState expectedStates[BUTTON_COUNT];
+
+  bytecpy(expectedStates, buttonStates, BUTTON_COUNT);
 
   zassert_equal(successRet, buttonMngrGetAllStates(fixture->buttonStates,
     BUTTON_COUNT));
 
   for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
-    zassert_equal(buttonStates[i], fixture->buttonStates[i]);
+    zassert_equal(expectedStates[i], fixture->buttonStates[i]);
+
+  for(uint8_t i = TC_INC_IDX; i < BUTTON_COUNT; ++i)
+    zassert_equal(BUTTON_DEPRESSED, buttonStates[i]);
 }
 
 /** @} */
