@@ -31,34 +31,22 @@
 
     /* the following are not LED but merely output GPIOs */
     btn_col0: btn_col0 {
-			gpios = <&gpiob 0 GPIO_ACTIVE_LOW>;
+			gpios = <&gpioc 10 GPIO_ACTIVE_LOW>;
 			label = "Button Col0";
 		};
     btn_col1: btn_col1 {
-			gpios = <&gpiob 1 GPIO_ACTIVE_LOW>;
+			gpios = <&gpioc 11 GPIO_ACTIVE_LOW>;
 			label = "Button Col1";
 		};
     btn_col2: btn_col2 {
-			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+			gpios = <&gpioc 12 GPIO_ACTIVE_LOW>;
 			label = "Button Col2";
 		};
     btn_col3: btn_col3 {
-			gpios = <&gpiob 10 GPIO_ACTIVE_LOW>;
+			gpios = <&gpiod 2 GPIO_ACTIVE_LOW>;
 			label = "Button Col3";
 		};
-    btn_col4: btn_col4 {
-			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;
-			label = "Button Col4";
-		};
-    btn_col5: btn_col5 {
-			gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
-			label = "Button Col5";
-		};
-    btn_col6: btn_col6 {
-			gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
-			label = "Button Col6";
-		};
-    stripdataline: dataline {
+    strip_data_line: strip_data_line {
       gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
 			label = "ALIVE LED";
     };
@@ -68,68 +56,100 @@
 		compatible = "gpio-keys";
     /* following are merely inputs */
 		btn_row0: btn_row0 {
-			gpios = <&gpioa 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiob 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row0";
 		};
     btn_row1: btn_row1 {
-			gpios = <&gpioc 10 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiob 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row1";
 		};
     btn_row2: btn_row2 {
-			gpios = <&gpioc 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiob 14 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row2";
 		};
     btn_row3: btn_row3 {
-			gpios = <&gpioc 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiob 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row3";
 		};
     btn_row4: btn_row4 {
-			gpios = <&gpiod 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpioc 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row4";
 		};
     btn_row5: btn_row5 {
-			gpios = <&gpiob 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpioc 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row5";
 		};
     btn_row6: btn_row6 {
-			gpios = <&gpioa 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpioc 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row6";
 		};
     btn_row7: btn_row7 {
-			gpios = <&gpioa 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpioc 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
       label = "Button Row7";
 		};
-    btn_row8: btn_row8 {
-			gpios = <&gpioa 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-      label = "Button Row8";
+    left_shifter: left_shifter {
+			gpios = <&gpioa 10 (GPIO_ACTIVE_LOW)>;
+      label = "Left Shifter";
 		};
-    btn_row9: btn_row9 {
-			gpios = <&gpioa 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-      label = "Button Row9";
-		};
-    btn_row10: btn_row10 {
-			gpios = <&gpioa 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-      label = "Button Row10";
-		};
-    btn_row11: btn_row11 {
-			gpios = <&gpioa 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-      label = "Button Row11";
-		};
-    shifter_left: left_shifter {
-			gpios = <&gpioa 2 (GPIO_ACTIVE_LOW)>;
-      label = "Button Row11";
-		};
-    shifter_right: right_shifter {
-			gpios = <&gpioa 3 (GPIO_ACTIVE_LOW)>;
-      label = "Button Row11";
-		};
-    rocker_left: left_rocker {
-			gpios = <&gpioc 14 (GPIO_ACTIVE_LOW)>;
-      label = "Button Row11";
-		};
-    rocker_right: right_rocker {
+    right_shifter: right_shifter {
 			gpios = <&gpioc 13 (GPIO_ACTIVE_LOW)>;
-      label = "Button Row11";
+      label = "Right Shifter";
+		};
+    left_rocker: left_rocker {
+			gpios = <&gpiob 6 (GPIO_ACTIVE_LOW)>;
+      label = "Left Rocker";
+		};
+    right_rocker: right_rocker {
+			gpios = <&gpiob 5 (GPIO_ACTIVE_LOW)>;
+      label = "Right Rocker";
+		};
+    left_enc_a: left_enc_a {
+			gpios = <&gpiob 4 (GPIO_ACTIVE_HIGH)>;
+      label = "Left Encoder A";
+		};
+    left_enc_b: left_enc_b {
+			gpios = <&gpiob 3 (GPIO_ACTIVE_HIGH)>;
+      label = "Right Encoder B";
+		};
+    right_enc_a: right_enc_a {
+			gpios = <&gpiob 9 (GPIO_ACTIVE_HIGH)>;
+      label = "Right Encoder A";
+		};
+    right_enc_b: right_enc_b {
+			gpios = <&gpiob 8 (GPIO_ACTIVE_HIGH)>;
+      label = "Right Encoder B";
+		};
+    tc_enc_a: tc_enc_a {
+			gpios = <&gpioa 8 (GPIO_ACTIVE_HIGH)>;
+      label = "TC Encoder A";
+		};
+    tc_enc_b: tc_enc_b {
+			gpios = <&gpioa 9 (GPIO_ACTIVE_HIGH)>;
+      label = "TC Encoder B";
+		};
+    tc1_enc_a: tc1_enc_a {
+			gpios = <&gpiob 11 (GPIO_ACTIVE_HIGH)>;
+      label = "TC1 Encoder A";
+		};
+    tc1_enc_b: tc1_enc_b {
+			gpios = <&gpiob 10 (GPIO_ACTIVE_HIGH)>;
+      label = "TC1 Encoder B";
+		};
+    abs_enc_a: abs_enc_a {
+			gpios = <&gpioc 0 (GPIO_ACTIVE_HIGH)>;
+      label = "ABS Encoder A";
+		};
+    abs_enc_b: abs_enc_b {
+			gpios = <&gpioc 1 (GPIO_ACTIVE_HIGH)>;
+      label = "ABS Encoder B";
+		};
+    map_enc_a: map_enc_a {
+			gpios = <&gpioc 13 (GPIO_ACTIVE_HIGH)>;
+      label = "MAP Encoder A";
+		};
+    map_enc_b: map_enc_b {
+			gpios = <&gpioc 13 (GPIO_ACTIVE_HIGH)>;
+      label = "MAP Encoder B";
 		};
 	};
 
@@ -141,9 +161,6 @@
     col1 = &btn_col1;
     col2 = &btn_col2;
     col3 = &btn_col3;
-    col4 = &btn_col4;
-    col5 = &btn_col5;
-    col6 = &btn_col6;
     /* button rows */
     row0 = &btn_row0;
     row1 = &btn_row1;
@@ -153,19 +170,28 @@
     row5 = &btn_row5;
     row6 = &btn_row6;
     row7 = &btn_row7;
-    row8 = &btn_row8;
-    row9 = &btn_row9;
-    row10 = &btn_row10;
-    row11 = &btn_row11;
     /* shifter */
-    shifterleft = &shifter_left;
-    shifterright = &shifter_right;
+    left-shifter = &left_shifter;
+    right-shifter = &right_shifter;
     /* rocker */
-    rockerleft = &rocker_left;
-    rockerright = &rocker_right;
+    left-rocker = &left_rocker;
+    right-rocker = &right_rocker;
+    /* encoders */
+    left-enc-a = &left_enc_a;
+    left-enc-b = &left_enc_b;
+    right-enc-a = &right_enc_a;
+    right-enc-b = &right_enc_b;
+    tc-enc-a = &tc_enc_a;
+    tc-enc-b = &tc_enc_b;
+    tc1-enc-a = &tc1_enc_a;
+    tc1-enc-b = &tc1_enc_b;
+    abs-enc-a = &abs_enc_a;
+    abs-enc-b = &abs_enc_b;
+    map-enc-a = &map_enc_a;
+    map-enc-b = &map_enc_b;
     /* led strip */
-    stripcounter = &stripcounter;
-    stripdataline = &stripdataline;
+    strip-counter = &strip_counter;
+    strip-dataline = &strip_data_line;
     /* adc */
     adc = &adc1;
     /* usb */
@@ -250,7 +276,7 @@
   st,prescaler = <8>; // TODO: remove when working from real hardware.
 	// st,prescaler = <6>;
 	status = "okay";
-  stripcounter: counter {
+  strip_counter: counter {
 		compatible = "st,stm32-counter";
 		status = "okay";
 		label = "LED strip counter";
