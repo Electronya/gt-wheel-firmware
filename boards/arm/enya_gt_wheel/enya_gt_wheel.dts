@@ -58,10 +58,6 @@
 			gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
 			label = "Button Col6";
 		};
-    stripdataline: dataline {
-      gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
-			label = "ALIVE LED";
-    };
 	};
 
 	gpio_keys {
@@ -164,8 +160,7 @@
     rockerleft = &left_rocker;
     rockerright = &right_rocker;
     /* led strip */
-    stripcounter = &stripcounter;
-    stripdataline = &stripdataline;
+    ledstrip = &led_strip;
     /* adc */
     adc = &adc1;
     /* usb */
@@ -211,8 +206,13 @@
 	pinctrl-0 = <&spi1_mosi_pa7 &spi1_miso_pa6 &spi1_sck_pa5>;
 	pinctrl-names = "default";
 	status = "okay";
+
+  dmas = <&dma1 3 (STM32_DMA_PERIPH_TX | STM32_DMA_PRIORITY_HIGH)>,
+		     <&dma1 2 (STM32_DMA_PERIPH_RX | STM32_DMA_PRIORITY_HIGH)>;
+	dma-names = "tx", "rx";
+
   led_strip: ws2812@0 {
-		compatible = "worldsemi,ws2812-spi";
+		compatible = "everlight,b1414", "worldsemi,ws2812-spi";
     status = "okay";
 		/* SPI */
 		reg = <0>; /* ignored, but necessary for SPI bindings */
@@ -224,7 +224,7 @@
                      LED_COLOR_ID_BLUE>;
 		spi-one-frame = <ONE_FRAME>;
 		spi-zero-frame = <ZERO_FRAME>;
-    reset-delay = <60>;
+    reset-delay = <250>;
 	};
 };
 
@@ -245,14 +245,6 @@
 	status = "disabled";
 };
 
-&timers6 {
-  /* Timer freq: ~6000000Hz */
-  st,prescaler = <8>; // TODO: remove when working from real hardware.
-	// st,prescaler = <6>;
-	status = "okay";
-  stripcounter: counter {
-		compatible = "st,stm32-counter";
-		status = "okay";
-		label = "LED strip counter";
-	};
+&dma1 {
+  status = "okay";
 };
