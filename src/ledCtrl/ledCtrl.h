@@ -75,7 +75,7 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void);
  *
  * @return          0 if successful, the error code otherwise.
  */
-int ledCtrlSetRpmChaserPixels(uint8_t *simhubPxl, size_t size);
+int ledCtrlSetRpmChaserPixels(uint8_t *pixels, size_t size);
 
 #endif    /* LED_CTRL */
 

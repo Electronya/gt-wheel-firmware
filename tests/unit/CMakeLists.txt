@@ -18,8 +18,8 @@ set(INC "")
 
 getFileListForSuite(SRC INC)
 
-message("SRC: ${SRC}")
-message("INC: ${INC}")
+# message("SRC: ${SRC}")
+# message("INC: ${INC}")
 
 target_sources(app PRIVATE ${SRC})
 target_include_directories(app PRIVATE ${INC})
