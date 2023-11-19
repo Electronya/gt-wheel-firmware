@@ -42,18 +42,8 @@ LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
 
 #ifndef CONFIG_ZTEST
 static ZephyrLedStrip ledStrip = {
-  .timingCntr = {
-    .dev = DEVICE_DT_GET(DT_ALIAS(strip_counter)),
-  },
-  .dataLine = {
-    .dev = GPIO_DT_SPEC_GET_OR(DT_ALIAS(strip_data_line), gpios, {0}),
-  },
-  .pixelCount = 5,
-  .t0h = 300,
-  .t0l = 800,
-  .t1h = 750,
-  .t1l = 200,
-  .rst = 200000,
+  .dev = DEVICE_DT_GET(DT_ALIAS(ledstrip)),
+  .pixelCount = DT_PROP(DT_ALIAS(ledstrip), chain_length),
 };
 #else
 static ZephyrLedStrip ledStrip;
@@ -62,7 +52,7 @@ static ZephyrLedStrip ledStrip;
 /**
  * @brief Encoder pixel default color.
 */
-ZephyrGrbPixel encDefColor = {
+ZephyrRgbLed encDefColor = {
   .g = 0x00,
   .r = 0x00,
   .b = 0x0f,
@@ -71,7 +61,7 @@ ZephyrGrbPixel encDefColor = {
 /**
  * @brief Encoder pixel secondary color.
 */
-ZephyrGrbPixel encSecColor = {
+ZephyrRgbLed encSecColor = {
   .g = 0x00,
   .r = 0x0f,
   .b = 0x00,
@@ -81,7 +71,7 @@ int ledCtrlInit(void)
 {
   int rc;
 
-  rc = zephyrLedStripInit(&ledStrip, LED_STRIP_COLOR_RGB, ledStrip.pixelCount);
+  rc = zephyrLedStripInit(&ledStrip, ledStrip.pixelCount);
   return rc;
 }
 
@@ -94,7 +84,7 @@ int ledCtrlSetRightEncPixelDefaultMode(void)
 {
   int rc;
 
-  rc = zephyrLedStripSetGrbPixel(&ledStrip, RIGHT_ENCODER_PIXEL_IDX,
+  rc = zephyrLedStripSetPixel(&ledStrip, RIGHT_ENCODER_PIXEL_IDX,
     &encDefColor);
   if(rc < 0)
     return rc;
@@ -106,7 +96,7 @@ int ledCtrlSetRightEncPixelSecondaryMode(void)
 {
   int rc;
 
-  rc = zephyrLedStripSetGrbPixel(&ledStrip, RIGHT_ENCODER_PIXEL_IDX,
+  rc = zephyrLedStripSetPixel(&ledStrip, RIGHT_ENCODER_PIXEL_IDX,
     &encSecColor);
   if(rc < 0)
     return rc;
@@ -118,7 +108,7 @@ int ledCtrlSetLeftEncPixelDefaultMode(void)
 {
   int rc;
 
-  rc = zephyrLedStripSetGrbPixel(&ledStrip, LEFT_ENCODER_PIXEL_IDX,
+  rc = zephyrLedStripSetPixel(&ledStrip, LEFT_ENCODER_PIXEL_IDX,
     &encDefColor);
   if(rc < 0)
     return rc;
@@ -130,7 +120,7 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void)
 {
   int rc;
 
-  rc = zephyrLedStripSetGrbPixel(&ledStrip, LEFT_ENCODER_PIXEL_IDX,
+  rc = zephyrLedStripSetPixel(&ledStrip, LEFT_ENCODER_PIXEL_IDX,
     &encSecColor);
   if(rc < 0)
     return rc;
@@ -138,11 +128,11 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void)
   return zephyrLedStripUpdate(&ledStrip);
 }
 
-int ledCtrlSetRpmChaserPixels(ZephyrGrbPixel *pixels)
+int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels)
 {
   int rc;
 
-  rc = zephyrLedStripSetGrbPixels(&ledStrip, RPM_CHASER_PIXEL_OFFSET,
+  rc = zephyrLedStripSetPixels(&ledStrip, RPM_CHASER_PIXEL_OFFSET,
     ledStrip.pixelCount, pixels);
   if(rc < 0)
     return rc;

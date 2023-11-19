@@ -69,7 +69,7 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void);
  *
  * @return          0 if successful, the error code otherwise.
  */
-int ledCtrlSetRpmChaserPixels(ZephyrGrbPixel *pixels);
+int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels);
 
 #endif    /* LED_CTRL */
 
