@@ -15,6 +15,18 @@ macro(getFileListForSuite sourceList includeList)
     listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
   endif()
 
+  if(TEST_SUITE STREQUAL "buttonMngr")
+    listSources(${CMAKE_CURRENT_SOURCE_DIR}/buttonMngr testSrc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/buttonMngr testInc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
+  endif()
+
+  if(TEST_SUITE STREQUAL "clutchReader")
+    listSources(${CMAKE_CURRENT_SOURCE_DIR}/clutchReader testSrc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/clutchReader testInc)
+    listIncludesDir(${CMAKE_CURRENT_SOURCE_DIR}/../../src modInc)
+  endif()
+
   # message("testSrc: ${testSrc}")
   # message("testInc: ${testInc}")
   # message("modSrc: ${modSrc}")
