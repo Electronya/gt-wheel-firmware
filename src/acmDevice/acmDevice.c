@@ -179,9 +179,12 @@ int acmDeviceInit(void)
   zephyrWorkInit(&work);
   zephyrWorkQueueInit(&workQueue);
 
-  zephyrAcmEnableRxIrq(&acmDev);
-
   return rc;
+}
+
+int acmDeviceStart(void)
+{
+  return zephyrAcmStart(&acmDev);
 }
 
 /** @} */

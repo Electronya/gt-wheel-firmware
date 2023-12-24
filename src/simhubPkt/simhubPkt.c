@@ -29,7 +29,7 @@
 #define SIMHUB_PKT_MODULE_NAME  simhub_packet_module
 
 /* Setting module logging */
-LOG_MODULE_DECLARE(SIMHUB_PKT_MODULE_NAME);
+LOG_MODULE_REGISTER(SIMHUB_PKT_MODULE_NAME);
 
 /**
  * @brief The size of the packet header.

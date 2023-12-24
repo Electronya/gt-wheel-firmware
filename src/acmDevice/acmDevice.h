@@ -23,6 +23,13 @@
  */
 int acmDeviceInit(void);
 
+/**
+ * @brief   Get the ACM DTR line.
+ *
+ * @return  0 if successful, the error code otherwise.
+ */
+int acmDeviceStart(void);
+
 #endif    /* ACM_DEVICE */
 
 /** @} */
