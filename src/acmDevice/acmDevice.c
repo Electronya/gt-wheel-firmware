@@ -67,6 +67,7 @@ static void acmDeviceWorker(struct k_work *item)
   SimhubPktTypes pktType;
   uint8_t *data = NULL;
 
+  LOG_DBG("worker started");
   byteCount = simhubPktBufClaimPutting(&data, SIMHUB_RX_PKT_BUF_SIZE);
   byteCount = zephyrAcmReadRingBuffer(&acmDev, data, byteCount);
   rc = simhubPktBufFinishPutting(byteCount);
@@ -76,6 +77,7 @@ static void acmDeviceWorker(struct k_work *item)
 
   if(simhubPktIsPktAvailable(&pktType))
   {
+    LOG_DBG("packet of type: %d available", pktType);
     switch(pktType)
     {
       case UNLOCK_TYPE:
@@ -110,6 +112,8 @@ static void acmDeviceWorker(struct k_work *item)
     if(txResponse)
     {
       byteCount = simhubPktBufClaimGetting(&data, SIMHUB_TX_PKT_BUF_SIZE);
+      data[byteCount] = '\0';
+      LOG_DBG("response: %s", data);
       byteCount = zephyrAcmWriteRingBuffer(&acmDev, data, byteCount);
       rc = simhubPktBufFinishGetting(byteCount);
       // TODO: fatal error management.
@@ -130,14 +134,17 @@ static void acmDeviceIrq(const struct device *dev, void *usrData)
 {
   int rc;
 
+  LOG_DBG("processing ACM IRQ");
   if(zephyrAcmIrqUpdate(&acmDev) && zephyrAcmIsIrqPending(&acmDev))
   {
     if(zephyrAcmIsRxIrqReady(&acmDev))
     {
+      LOG_DBG("processing Rx IRQ");
       rc = zephyrAcmReadFifo(&acmDev);
       if(rc < 0)
         LOG_ERR("unable to read ACM device FIFO");
 
+      LOG_DBG("starting processing worker");
       rc =zephyrWorkSubmitToQueue(&workQueue, &work);
       if(rc < 0)
         LOG_ERR("unable to submit work for processing");
@@ -147,6 +154,7 @@ static void acmDeviceIrq(const struct device *dev, void *usrData)
 
     if(zephyrAcmIsTxIrqReady(&acmDev))
     {
+      LOG_DBG("processing Tx IRQ");
       rc = zephyrAcmWriteFifo(&acmDev);
       if(rc < 0)
         LOG_ERR("unable to write to ACM device FIFO");
@@ -165,6 +173,7 @@ int acmDeviceInit(void)
 {
   int rc;
 
+  LOG_DBG("initializing ACM device");
   acmDev.cb = acmDeviceIrq;
   rc = zephyrAcmInit(&acmDev, SIMHUB_RX_PKT_BUF_SIZE, SIMHUB_TX_PKT_BUF_SIZE);
   if(rc < 0)
@@ -173,8 +182,10 @@ int acmDeviceInit(void)
     return rc;
   }
 
+  LOG_DBG("initializing SimHUB packet parser");
   simhubPktInitBuffer();
 
+  LOG_DBG("initializing ACM worker");
   work.handler = acmDeviceWorker;
   zephyrWorkInit(&work);
   zephyrWorkQueueInit(&workQueue);
@@ -184,6 +195,7 @@ int acmDeviceInit(void)
 
 int acmDeviceStart(void)
 {
+  LOG_DBG("starting ACM device");
   return zephyrAcmStart(&acmDev);
 }
 

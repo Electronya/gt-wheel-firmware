@@ -6,7 +6,7 @@
 
 /dts-v1/;
 #include <st/f3/stm32f303Xe.dtsi>
-#include <st/f3/stm32f303r(d-e)tx-pinctrl.dtsi>
+#include <st/f3/stm32f303r(b-c)tx-pinctrl.dtsi>
 #include <zephyr/dt-bindings/led/led.h>
 
 #include "./ws2812B-bindings.h"
@@ -255,7 +255,8 @@
 		reg = <0>; /* ignored, but necessary for SPI bindings */
 		spi-max-frequency = <SPI_FREQ>;
 		/* WS2812 */
-		chain-length = <14>;
+    // TODO: set back to 14.
+		chain-length = <8>;
 		color-mapping = <LED_COLOR_ID_GREEN
                      LED_COLOR_ID_RED
                      LED_COLOR_ID_BLUE>;
@@ -271,10 +272,10 @@
   pinctrl-0 = <&adc1_in1_pa0 &adc1_in2_pa1>;
 };
 
-&usb {
-  status = "okay";
+zephyr_udc0: &usb {
   pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
 	pinctrl-names = "default";
+	status = "okay";
   cdc_acm_uart0 {
 		compatible = "zephyr,cdc-acm-uart";
 	};
