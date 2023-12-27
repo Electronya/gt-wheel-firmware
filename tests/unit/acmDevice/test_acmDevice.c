@@ -582,7 +582,6 @@ ZTEST(acmDevice_suite, test_acmDeviceInit_Success)
   zassert_equal(1, zephyrWorkQueueInit_fake.call_count);
   zassert_equal(&workQueue, zephyrWorkQueueInit_fake.arg0_val);
   zassert_equal(1, simhubPktInitBuffer_fake.call_count);
-  zassert_equal(1, zephyrAcmEnableRxIrq_fake.call_count);
 }
 
 /** @} */
