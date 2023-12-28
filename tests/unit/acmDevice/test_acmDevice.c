@@ -30,6 +30,7 @@ DEFINE_FFF_GLOBALS;
 
 /* mocks */
 FAKE_VALUE_FUNC(int, zephyrAcmInit, ZephyrACM*, size_t, size_t);
+FAKE_VALUE_FUNC(int, zephyrAcmStart, ZephyrACM*);
 FAKE_VOID_FUNC(zephyrAcmEnableRxIrq, ZephyrACM*);
 FAKE_VOID_FUNC(zephyrAcmEnableTxIrq, ZephyrACM*);
 FAKE_VOID_FUNC(zephyrAcmDisableTxIrq, ZephyrACM*);
@@ -113,6 +114,7 @@ static void acmDeviceCaseSetup(void *f)
     fixture->txBuffer[i] = 0;
 
   RESET_FAKE(zephyrAcmInit);
+  RESET_FAKE(zephyrAcmStart);
   RESET_FAKE(zephyrAcmEnableRxIrq);
   RESET_FAKE(zephyrAcmEnableTxIrq);
   RESET_FAKE(zephyrAcmDisableTxIrq);
@@ -582,6 +584,32 @@ ZTEST(acmDevice_suite, test_acmDeviceInit_Success)
   zassert_equal(1, zephyrWorkQueueInit_fake.call_count);
   zassert_equal(&workQueue, zephyrWorkQueueInit_fake.arg0_val);
   zassert_equal(1, simhubPktInitBuffer_fake.call_count);
+}
+
+/**
+ * @test  acmDeviceStart must return the error code when starting the ACM
+ *        device fails.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceStart_Fail)
+{
+  int failRet = -EIO;
+
+  zephyrAcmStart_fake.return_val = failRet;
+
+  zassert_equal(failRet, acmDeviceStart());
+}
+
+/**
+ * @test  acmDeviceStart must return the success code when starting the ACM
+ *        device succeeds.
+*/
+ZTEST(acmDevice_suite, test_acmDeviceStart_Success)
+{
+  int successRet = 0;
+
+  zephyrAcmStart_fake.return_val = successRet;
+
+  zassert_equal(successRet, acmDeviceStart());
 }
 
 /** @} */

@@ -24,7 +24,7 @@
 int acmDeviceInit(void);
 
 /**
- * @brief   Get the ACM DTR line.
+ * @brief   Start the ACM device started.
  *
  * @return  0 if successful, the error code otherwise.
  */
