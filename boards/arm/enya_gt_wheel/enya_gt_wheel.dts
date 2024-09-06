@@ -1,19 +1,17 @@
 /*
- * Copyright (c) 2020 Paul M. Bendixen
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2023 Electronya
  */
 
 /dts-v1/;
-#include <st/f3/stm32f303Xe.dtsi>
-#include <st/f3/stm32f303r(b-c)tx-pinctrl.dtsi>
+#include <st/f3/stm32f303Xc.dtsi>
+#include <st/f3/stm32f303v(b-c)tx-pinctrl.dtsi>
 #include <zephyr/dt-bindings/led/led.h>
 
 #include "./ws2812B-bindings.h"
 
 / {
 	model = "Electronya DIY GT Wheel";
-	compatible = "en,enya-t-wheel";
+	compatible = "en,enya-gt-wheel";
 
 	chosen {
 		zephyr,console = &usart1;

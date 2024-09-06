@@ -1,7 +1,8 @@
 # Macro that list all the source file in the project
 macro(listSources rootDir result)
   # message("source root dir: ${rootDir}")
-  file(GLOB_RECURSE sourceList ${rootDir}/*.c)
+  # file(GLOB_RECURSE sourceList ${rootDir}/*.c)
+  set(sourceList ${rootDir}/main.c)
   set(${result} ${sourceList})
 endmacro()
 
