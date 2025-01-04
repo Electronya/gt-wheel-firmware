@@ -41,18 +41,18 @@ LOG_MODULE_REGISTER(LED_CTRL_MODULE_NAME);
 #define RPM_CHASER_PIXEL_OFFSET       2
 
 #ifndef CONFIG_ZTEST
-static ZephyrLedStrip ledStrip = {
+static ZephyrLedStrip_t ledStrip = {
   .dev = DEVICE_DT_GET(DT_ALIAS(ledstrip)),
   .pixelCount = DT_PROP(DT_ALIAS(ledstrip), chain_length),
 };
 #else
-static ZephyrLedStrip ledStrip;
+static ZephyrLedStrip_t ledStrip;
 #endif
 
 /**
  * @brief Encoder pixel default color.
 */
-ZephyrRgbLed encDefColor = {
+ZephyrRgbPixel_t encDefColor = {
   .g = 0x00,
   .r = 0x00,
   .b = 0x0f,
@@ -61,7 +61,7 @@ ZephyrRgbLed encDefColor = {
 /**
  * @brief Encoder pixel secondary color.
 */
-ZephyrRgbLed encSecColor = {
+ZephyrRgbPixel_t encSecColor = {
   .g = 0x00,
   .r = 0x0f,
   .b = 0x00,
@@ -128,7 +128,7 @@ int ledCtrlSetLeftEncPixelSecondaryMode(void)
   return zephyrLedStripUpdate(&ledStrip);
 }
 
-int ledCtrlSetRpmChaserPixels(ZephyrRgbLed *pixels)
+int ledCtrlSetRpmChaserPixels(ZephyrRgbPixel_t *pixels)
 {
   int rc;
 

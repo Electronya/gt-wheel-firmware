@@ -58,7 +58,7 @@ LOG_MODULE_REGISTER(CLUTCH_READER_MODULE_NAME);
 #define CLUTCH_READER_THREAD_NAME         "clutchReader"
 
 K_THREAD_STACK_DEFINE(clutchThreadStack, CLUTCH_READER_STACK_SIZE);
-static ZephyrThread thread = {
+static ZephyrThread_t thread = {
   .stack = clutchThreadStack,
   .stackSize = CLUTCH_READER_STACK_SIZE,
   .priority = 2,
@@ -166,7 +166,7 @@ static void clutchReaderThread(void *p1, void *p2, void *p3)
 int clutchReaderInit(void)
 {
   int rc;
-  ZephyrAdcChanConfig configs[CLUTCH_READER_CHAN_CNT];
+  ZephyrAdcChanConfig_t configs[CLUTCH_READER_CHAN_CNT];
 
   for(uint8_t i = 0; i < CLUTCH_READER_CHAN_CNT; ++i)
   {

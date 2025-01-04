@@ -25,13 +25,13 @@
 DEFINE_FFF_GLOBALS;
 
 /* mocks */
-FAKE_VALUE_FUNC(int, zephyrLedStripInit, ZephyrLedStrip*, uint32_t);
-FAKE_VALUE_FUNC(uint32_t, zephyrLedStripGetPixelCnt, ZephyrLedStrip*);
-FAKE_VALUE_FUNC(int, zephyrLedStripSetPixel, ZephyrLedStrip*, uint32_t,
-  const ZephyrRgbLed*);
-FAKE_VALUE_FUNC(int, zephyrLedStripSetPixels, ZephyrLedStrip*, uint32_t,
-  uint32_t, const ZephyrRgbLed*);
-FAKE_VALUE_FUNC(int, zephyrLedStripUpdate, ZephyrLedStrip*);
+FAKE_VALUE_FUNC(int, zephyrLedStripInit, ZephyrLedStrip_t*, uint32_t);
+FAKE_VALUE_FUNC(uint32_t, zephyrLedStripGetPixelCnt, ZephyrLedStrip_t*);
+FAKE_VALUE_FUNC(int, zephyrLedStripSetPixel, ZephyrLedStrip_t*, uint32_t,
+  const ZephyrRgbPixel_t*);
+FAKE_VALUE_FUNC(int, zephyrLedStripSetPixels, ZephyrLedStrip_t*, uint32_t,
+  uint32_t, const ZephyrRgbPixel_t*);
+FAKE_VALUE_FUNC(int, zephyrLedStripUpdate, ZephyrLedStrip_t*);
 
 static void ledCtrlCaseSetup(void *f)
 {
@@ -410,7 +410,7 @@ ZTEST(ledCtrl_suite, test_ledCtrlSetLeftEncPixelSecondaryMode_Success)
 ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_SetPixelsFail)
 {
   int failRet = -EDOM;
-  ZephyrRgbLed pixels[RPM_CHASER_PIXEL_COUNT];
+  ZephyrRgbPixel_t pixels[RPM_CHASER_PIXEL_COUNT];
 
   ledStrip.pixelCount = RPM_CHASER_PIXEL_COUNT;
   zephyrLedStripSetPixels_fake.return_val = failRet;
@@ -438,7 +438,7 @@ ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_UpdateFail)
 {
   int successRet = 0;
   int failRet = -EDOM;
-  ZephyrRgbLed pixels[RPM_CHASER_PIXEL_COUNT];
+  ZephyrRgbPixel_t pixels[RPM_CHASER_PIXEL_COUNT];
 
   ledStrip.pixelCount = RPM_CHASER_PIXEL_COUNT;
   zephyrLedStripSetPixels_fake.return_val = successRet;
@@ -470,7 +470,7 @@ ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_UpdateFail)
 ZTEST(ledCtrl_suite, test_ledCtrlSetRpmChaserPixels_Success)
 {
   int successRet = 0;
-  ZephyrRgbLed pixels[RPM_CHASER_PIXEL_COUNT];
+  ZephyrRgbPixel_t pixels[RPM_CHASER_PIXEL_COUNT];
 
   ledStrip.pixelCount = RPM_CHASER_PIXEL_COUNT;
   zephyrLedStripSetPixels_fake.return_val = successRet;

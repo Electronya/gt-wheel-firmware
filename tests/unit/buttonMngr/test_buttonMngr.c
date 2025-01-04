@@ -29,15 +29,15 @@
 DEFINE_FFF_GLOBALS;
 
 /* mocks */
-FAKE_VALUE_FUNC(int, zephyrGpioInit, ZephyrGpio*, ZephyrGpioDir);
-FAKE_VALUE_FUNC(int, zephyrGpioAddIrqCallback, ZephyrGpio*, ZephyrGpioIrqCb);
-FAKE_VALUE_FUNC(int, zephyrGpioEnableIrq, ZephyrGpio*, ZephyrGpioIrqTrig);
-FAKE_VALUE_FUNC(int, zephyrGpioSet, ZephyrGpio*);
-FAKE_VALUE_FUNC(int, zephyrGpioClear, ZephyrGpio*);
-FAKE_VALUE_FUNC(int, zephyrGpioRead, ZephyrGpio*);
+FAKE_VALUE_FUNC(int, zephyrGpioInit, ZephyrGpio_t*, ZephyrGpioDir_t);
+FAKE_VALUE_FUNC(int, zephyrGpioAddIrqCallback, ZephyrGpio_t*, ZephyrGpioIrqCb_t);
+FAKE_VALUE_FUNC(int, zephyrGpioEnableIrq, ZephyrGpio_t*, ZephyrGpioIrqTrig_t);
+FAKE_VALUE_FUNC(int, zephyrGpioSet, ZephyrGpio_t*);
+FAKE_VALUE_FUNC(int, zephyrGpioClear, ZephyrGpio_t*);
+FAKE_VALUE_FUNC(int, zephyrGpioRead, ZephyrGpio_t*);
 FAKE_VALUE_FUNC(uint32_t, zephyrThreadSleepMs, uint32_t);
-FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread*, char*, uint32_t,
-               ZephyrTimeUnit);
+FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread_t*, char*, uint32_t,
+               ZephyrTimeUnit_t);
 
 /**
  * @brief The total of row and column GPIOs.
@@ -66,7 +66,7 @@ struct buttonMngr_suite_fixture
   int colSetRetVals[BUTTON_COL_COUNT];                      /**< Column set return values. */
   int colClearRetVals[BUTTON_COL_COUNT];                    /**< Column clear return values. */
   int readRetVals[BUTTON_ROW_COUNT * BUTTON_COL_COUNT];     /**< Row read return values. */
-  WheelButtonState buttonStates[BUTTON_COUNT];              /**< The button states. */
+  WheelButtonState_t buttonStates[BUTTON_COUNT];            /**< The button states. */
 };
 
 static void *buttonMngrSuiteSetup(void)
@@ -239,7 +239,7 @@ ZTEST(buttonMngr_suite, test_leftEncoderIrq_ButtonUpdateStateM1)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -272,7 +272,7 @@ ZTEST(buttonMngr_suite, test_leftEncoderIrq_ButtonUpdateStateM2)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -307,7 +307,7 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM1)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -340,7 +340,7 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM2)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -374,7 +374,7 @@ ZTEST(buttonMngr_suite, test_tcEncoderIrq_ButtonUpdateState)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -406,7 +406,7 @@ ZTEST(buttonMngr_suite, test_tc1EncoderIrq_ButtonUpdateState)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -438,7 +438,7 @@ ZTEST(buttonMngr_suite, test_absEncoderIrq_ButtonUpdateState)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -470,7 +470,7 @@ ZTEST(buttonMngr_suite, test_mapEncoderIrq_ButtonUpdateState)
 {
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
-  WheelButtonState expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
+  WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
     {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
      {BUTTON_PRESSED, BUTTON_DEPRESSED},
      {BUTTON_DEPRESSED, BUTTON_PRESSED}};
@@ -1107,8 +1107,8 @@ ZTEST_F(buttonMngr_suite, test_ButtonMngrInit_MapEncoderFail)
 ZTEST_F(buttonMngr_suite, test_buttonMngrInit_Success)
 {
   int successRet = 0;
-  ZephyrGpio *expectedGpio;
-  ZephyrGpioDir expectedDir;
+  ZephyrGpio_t *expectedGpio;
+  ZephyrGpioDir_t expectedDir;
 
   SET_RETURN_SEQ(zephyrGpioInit, fixture->gpioInitRetVals, TOTAL_GPIO_COUNT);
 
@@ -1206,7 +1206,7 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrGetAllStates_BadCount)
 ZTEST_F(buttonMngr_suite, test_buttonMngrGetAllStates_Success)
 {
   int successRet = 0;
-  WheelButtonState expectedStates[BUTTON_COUNT];
+  WheelButtonState_t expectedStates[BUTTON_COUNT];
 
   bytecpy(expectedStates, buttonStates, BUTTON_COUNT);
 

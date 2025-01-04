@@ -29,12 +29,12 @@
 DEFINE_FFF_GLOBALS;
 
 /* mocks */
-FAKE_VALUE_FUNC(int, zephyrAdcInit, ZephyrAdcChanConfig*, size_t, ZephyrAdcRes,
+FAKE_VALUE_FUNC(int, zephyrAdcInit, ZephyrAdcChanConfig_t*, size_t, ZephyrAdcRes_t,
   uint32_t);
 FAKE_VALUE_FUNC(int, zephyrAdcGetSample, uint32_t, uint32_t*);
 FAKE_VALUE_FUNC(uint32_t, zephyrThreadSleepMs, uint32_t);
-FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread*, char*, uint32_t,
-               ZephyrTimeUnit);
+FAKE_VOID_FUNC(zephyrThreadCreate, ZephyrThread_t*, char*, uint32_t,
+               ZephyrTimeUnit_t);
 
 /**
  * @brief   Clutch reader test cases setup.
@@ -54,8 +54,8 @@ ZTEST_SUITE(clutchReader_suite, NULL, NULL, clutchReaderCaseSetup, NULL, NULL);
 /**
  * @brief The zephyrAdcInit custom fake for fails.
 */
-int customZephyrAdcInitFail(ZephyrAdcChanConfig *configs, size_t configCount,
-                            ZephyrAdcRes res, uint32_t vdd)
+int customZephyrAdcInitFail(ZephyrAdcChanConfig_t *configs, size_t configCount,
+                            ZephyrAdcRes_t res, uint32_t vdd)
 {
   zassert_equal(2, configCount);
   zassert_equal(ADC_12BITS_RES, res);
@@ -75,8 +75,8 @@ int customZephyrAdcInitFail(ZephyrAdcChanConfig *configs, size_t configCount,
 /**
  * @brief The zephyrAdcInit custom fake for success.
 */
-int customZephyrAdcInitSuccess(ZephyrAdcChanConfig *configs, size_t configCount,
-                               ZephyrAdcRes res, uint32_t vdd)
+int customZephyrAdcInitSuccess(ZephyrAdcChanConfig_t *configs, size_t configCount,
+                               ZephyrAdcRes_t res, uint32_t vdd)
 {
   zassert_equal(2, configCount);
   zassert_equal(ADC_12BITS_RES, res);

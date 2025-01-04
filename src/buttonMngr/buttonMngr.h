@@ -94,7 +94,7 @@ typedef enum
   BB_DEC_IDX,
   RIGHT_ENC_M2_DEC_IDX,
   BUTTON_COUNT,
-} WheelButtonIdx;
+} WheelButtonIdx_t;
 
 /**
  * @brief The button state.
@@ -103,7 +103,7 @@ typedef enum
 {
   BUTTON_DEPRESSED = 0,                   /**< The button depressed state. */
   BUTTON_PRESSED,                         /**< The button pressed state. */
-} WheelButtonState;
+} WheelButtonState_t;
 
 /**
  * @brief   Initialize the button manager.
@@ -120,7 +120,7 @@ int buttonMngrInit(void);
  *
  * @return  0 if successful, the error code otherwise.
  */
-int buttonMngrGetAllStates(WheelButtonState *states, size_t count);
+int buttonMngrGetAllStates(WheelButtonState_t *states, size_t count);
 
 #endif    /* BUTTON_MNGR */
 

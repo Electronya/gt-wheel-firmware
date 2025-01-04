@@ -58,4 +58,4 @@ dkms.conf
 # Zephyr
 /build/
 /html/
-/twister-out/
+/twister-out*/
