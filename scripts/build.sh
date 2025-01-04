@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script build the firware through electronya-firm-builder docker container
+# This script build the firmware through electronya-firm-builder docker container
 
 BUILD_MODE=""
 PROD_MODE="prod"
