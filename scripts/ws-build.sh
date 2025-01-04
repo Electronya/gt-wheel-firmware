@@ -13,10 +13,13 @@ while getopts ":up:" option
 do
   case "${option}" in
     u)
-      ./scripts/ws-update.sh
+      west update
       ;;
     p)
       PRISTINE_MODE=${OPTARG}
+      ;;
+    :)
+      exitError "ERROR: -${OPTARG} requires an argument."
       ;;
     \?)
       exitError "ERROR: -${OPTARG} is not a supported option."
