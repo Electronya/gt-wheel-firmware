@@ -101,7 +101,7 @@ typedef enum
 */
 typedef enum
 {
-  BUTTON_DEPRESSED = 0,                   /**< The button depressed state. */
+  BUTTON_UNPRESSED = 0,                   /**< The button depressed state. */
   BUTTON_PRESSED,                         /**< The button pressed state. */
 } WheelButtonState_t;
 

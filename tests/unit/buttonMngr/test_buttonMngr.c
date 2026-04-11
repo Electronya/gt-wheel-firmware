@@ -107,7 +107,7 @@ static void buttonMngrCaseSetup(void *f)
   for(uint8_t i = 0; i < BUTTON_ROW_COUNT * BUTTON_COL_COUNT; ++i)
   {
     if(i % 2)
-      fixture->readRetVals[i] = BUTTON_DEPRESSED;
+      fixture->readRetVals[i] = BUTTON_UNPRESSED;
     else
       fixture->readRetVals[i] = BUTTON_PRESSED;
   }
@@ -115,7 +115,7 @@ static void buttonMngrCaseSetup(void *f)
   for(uint8_t i = 0; i < BUTTON_COUNT; ++i)
   {
     if(i % 2)
-      fixture->buttonStates[i] = BUTTON_DEPRESSED;
+      fixture->buttonStates[i] = BUTTON_UNPRESSED;
     else
       fixture->buttonStates[i] = BUTTON_PRESSED;
   }
@@ -125,7 +125,7 @@ static void buttonMngrCaseSetup(void *f)
     if(i % 2)
       buttonStates[i] = BUTTON_PRESSED;
     else
-      buttonStates[i] = BUTTON_DEPRESSED;
+      buttonStates[i] = BUTTON_UNPRESSED;
   }
 
   for(uint8_t i = 0; i < RIGHT_ENC_IDX + 1; ++i)
@@ -240,16 +240,16 @@ ZTEST(buttonMngr_suite, test_leftEncoderIrq_ButtonUpdateStateM1)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[LEFT_ENC_M1_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[LEFT_ENC_M1_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[LEFT_ENC_M1_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[LEFT_ENC_M1_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[LEFT_ENC_IDX] = prevStates[i];
 
     leftEncoderIrq(NULL, NULL, 0);
@@ -273,9 +273,9 @@ ZTEST(buttonMngr_suite, test_leftEncoderIrq_ButtonUpdateStateM2)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   encModes[LEFT_ENC_IDX] = ENCODER_MODE_2;
 
@@ -283,8 +283,8 @@ ZTEST(buttonMngr_suite, test_leftEncoderIrq_ButtonUpdateStateM2)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[LEFT_ENC_M2_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[LEFT_ENC_M2_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[LEFT_ENC_M2_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[LEFT_ENC_M2_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[LEFT_ENC_IDX] = prevStates[i];
 
     leftEncoderIrq(NULL, NULL, 0);
@@ -308,16 +308,16 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM1)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[BB_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[BB_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[BB_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[BB_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[RIGHT_ENC_IDX] = prevStates[i];
 
     rightEncoderIrq(NULL, NULL, 0);
@@ -341,9 +341,9 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM2)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   encModes[RIGHT_ENC_IDX] = ENCODER_MODE_2;
 
@@ -351,8 +351,8 @@ ZTEST(buttonMngr_suite, test_rightEncoderIrq_ButtonUpdateStateM2)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[RIGHT_ENC_M2_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[RIGHT_ENC_M2_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[RIGHT_ENC_M2_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[RIGHT_ENC_M2_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[RIGHT_ENC_IDX] = prevStates[i];
 
     rightEncoderIrq(NULL, NULL, 0);
@@ -375,16 +375,16 @@ ZTEST(buttonMngr_suite, test_tcEncoderIrq_ButtonUpdateState)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[TC_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[TC_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[TC_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[TC_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[TC_ENC_IDX] = prevStates[i];
 
     tcEncoderIrq(NULL, NULL, 0);
@@ -407,16 +407,16 @@ ZTEST(buttonMngr_suite, test_tc1EncoderIrq_ButtonUpdateState)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[TC1_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[TC1_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[TC1_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[TC1_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[TC1_ENC_IDX] = prevStates[i];
 
     tc1EncoderIrq(NULL, NULL, 0);
@@ -439,16 +439,16 @@ ZTEST(buttonMngr_suite, test_absEncoderIrq_ButtonUpdateState)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[ABS_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[ABS_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[ABS_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[ABS_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[ABS_ENC_IDX] = prevStates[i];
 
     absEncoderIrq(NULL, NULL, 0);
@@ -471,16 +471,16 @@ ZTEST(buttonMngr_suite, test_mapEncoderIrq_ButtonUpdateState)
   uint8_t prevStates[ENC_STATE_BUTTONS_TEST_CNT] = {0, 1, 2};
   int gpioStates[BUTTON_MNGR_ENC_SIG_CNT] = {GPIO_CLR, GPIO_CLR};
   WheelButtonState_t expectedStates[ENC_STATE_BUTTONS_TEST_CNT][2] =
-    {{BUTTON_DEPRESSED, BUTTON_DEPRESSED},
-     {BUTTON_PRESSED, BUTTON_DEPRESSED},
-     {BUTTON_DEPRESSED, BUTTON_PRESSED}};
+    {{BUTTON_UNPRESSED, BUTTON_UNPRESSED},
+     {BUTTON_PRESSED, BUTTON_UNPRESSED},
+     {BUTTON_UNPRESSED, BUTTON_PRESSED}};
 
   for(uint8_t i = 0; i < ENC_STATE_BUTTONS_TEST_CNT; ++i)
   {
     SET_RETURN_SEQ(zephyrGpioRead, gpioStates, BUTTON_MNGR_ENC_SIG_CNT);
 
-    buttonStates[MAP_INC_IDX] = BUTTON_DEPRESSED;
-    buttonStates[MAP_DEC_IDX] = BUTTON_DEPRESSED;
+    buttonStates[MAP_INC_IDX] = BUTTON_UNPRESSED;
+    buttonStates[MAP_DEC_IDX] = BUTTON_UNPRESSED;
     encSigStates[MAP_ENC_IDX] = prevStates[i];
 
     mapEncoderIrq(NULL, NULL, 0);
@@ -1217,7 +1217,7 @@ ZTEST_F(buttonMngr_suite, test_buttonMngrGetAllStates_Success)
     zassert_equal(expectedStates[i], fixture->buttonStates[i]);
 
   for(uint8_t i = TC_INC_IDX; i < BUTTON_COUNT; ++i)
-    zassert_equal(BUTTON_DEPRESSED, buttonStates[i]);
+    zassert_equal(BUTTON_UNPRESSED, buttonStates[i]);
 }
 
 /** @} */
