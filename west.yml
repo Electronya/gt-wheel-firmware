@@ -1,8 +1,8 @@
-# TV Bench Controller Firmware Manifest
+# Electronya GT Wheel Firmware Manifest
 manifest:
   remotes:
     - name: electronya
-      url-base: https://github.com/Electronya
+      url-base: git@gitea.main-server.home:Electronya
     - name: zephyr
       url-base: https://github.com/zephyrproject-rtos
 
@@ -14,10 +14,10 @@ manifest:
       remote: zephyr
       repo-path: zephyr.git
       path: zephyr
-      revision: zephyr-v3.4.0
+      revision: v4.3-branch
       import: true
-    - name: zephyr-wrapper
+    - name: embedded-services
       remote: electronya
-      repo-path: zephyr-wrapper.git
-      path: modules/lib/electronya/zephyr-wrapper
+      repo-path: embedded-services.git
+      path: apps/embedded-services
       revision: main
