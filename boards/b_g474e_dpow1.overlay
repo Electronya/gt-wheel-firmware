@@ -1,0 +1,113 @@
+#include <zephyr/dt-bindings/dma/stm32_dma.h>
+#include <zephyr/dt-bindings/led/led.h>
+
+/ {
+  aliases {
+    adc-trigger = &adc_trigger_counter;
+    watchdog0 = &iwdg;
+    led-strip = &ws2812;
+    simhub-uart = &cdc_acm_uart0;
+  };
+
+  zephyr,user {
+    io-channels = <&adc1 1>, <&adc1 2>, <&adc1 3>, <&adc1 18>;
+    vref-channel-index = <3>;
+  };
+};
+
+&dma1 {
+  status = "okay";
+};
+
+&dmamux1 {
+  status = "okay";
+};
+
+&timers6 {
+  status = "okay";
+  st,prescaler = <63999>;  // 128MHz / (63999 + 1) = 2kHz timer clock
+
+  adc_trigger_counter: counter {
+    compatible = "st,stm32-counter";
+    status = "okay";
+  };
+};
+
+&usart1 {
+  status = "okay";
+  pinctrl-0 = <&usart1_tx_pa9>;
+  pinctrl-names = "default";
+  current-speed = <4000000>;  // 128MHz APB2 / 32 = 4MHz (exact)
+  data-bits = <8>;             // frame = 1+8+1 = 10 bits, multiple of bits-per-symbol=5
+  tx-invert;                   // produce idle-low signal required by WS2812
+  dmas = <&dmamux1 2 25 (STM32_DMA_MEMORY_TO_PERIPH | STM32_DMA_MEM_INC | STM32_DMA_PERIPH_8BITS | STM32_DMA_MEM_8BITS)>;
+  dma-names = "tx";
+
+  ws2812: ws2812 {
+    compatible = "worldsemi,ws2812-uart";
+    status = "okay";
+    bits-per-symbol = <5>;
+    one-symbol = <30>;  // 0b11110: T1H=1000ns T1L=250ns at 4MHz
+    zero-symbol = <16>; // 0b10000: T0H=250ns  T0L=1000ns at 4MHz
+    chain-length = <8>;
+    color-mapping = <LED_COLOR_ID_GREEN
+                     LED_COLOR_ID_RED
+                     LED_COLOR_ID_BLUE>;
+    reset-delay = <280>;
+  };
+};
+
+&zephyr_udc0 {
+  cdc_acm_uart0: cdc_acm_uart0 {
+    compatible = "zephyr,cdc-acm-uart";
+  };
+};
+
+&adc1 {
+  status = "okay";
+  pinctrl-0 = <&adc1_in1_pa0>, <&adc1_in2_pa1>, <&adc1_in3_pa2>;
+  pinctrl-names = "default";
+  st,adc-clock-source = "SYNC";
+  st,adc-prescaler = <4>;
+  #address-cells = <1>;
+  #size-cells = <0>;
+
+  dmas = <&dmamux1 1 5 (STM32_DMA_PERIPH_TO_MEMORY | STM32_DMA_MEM_INC | STM32_DMA_PERIPH_16BITS | STM32_DMA_MEM_16BITS)>;
+  dma-names = "adc";
+
+  channel1: channel@1 {
+    reg = <1>;
+    zephyr,gain = "ADC_GAIN_1";
+    zephyr,reference = "ADC_REF_INTERNAL";
+    zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 48)>;
+    zephyr,oversampling = <4>;
+    zephyr,resolution = <12>;
+  };
+
+  channel2: channel@2 {
+    reg = <2>;
+    zephyr,gain = "ADC_GAIN_1";
+    zephyr,reference = "ADC_REF_INTERNAL";
+    zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 48)>;
+    zephyr,oversampling = <4>;
+    zephyr,resolution = <12>;
+  };
+
+  channel3: channel@3 {
+    reg = <3>;
+    zephyr,gain = "ADC_GAIN_1";
+    zephyr,reference = "ADC_REF_INTERNAL";
+    zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 48)>;
+    zephyr,oversampling = <4>;
+    zephyr,resolution = <12>;
+  };
+
+  channel18: channel@12 {
+    reg = <18>;
+    zephyr,gain = "ADC_GAIN_1";
+    zephyr,reference = "ADC_REF_INTERNAL";
+    zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 48)>;
+    zephyr,oversampling = <4>;
+    zephyr,resolution = <12>;
+  };
+};
