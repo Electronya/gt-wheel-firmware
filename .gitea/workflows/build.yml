@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches: [ '*' ]
+
+jobs:
+  build:
+    runs-on: homelab-amd64
+    container:
+      image: gitea.main-server.home/electronya/electronya-firm-builder:latest
+
+    env:
+      NODE_TLS_REJECT_UNAUTHORIZED: '0'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        path: app
+
+    - name: Initialize west workspace
+      run: |
+        west init -l app
+        west update
+        west zephyr-export
+
+    - name: Build firmware
+      run: |
+        west build -b b_g474e_dpow1 app
