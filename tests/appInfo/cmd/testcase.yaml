@@ -1,0 +1,8 @@
+tests:
+  gt_wheel_firmware.app_info.cmd:
+    tags:
+      - unit_test
+      - app_info
+    platform_allow:
+      - native_sim
+      - native_sim/native/64

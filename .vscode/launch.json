@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "configurations": [
+    {
+      "name": "OpenOCD",
+      "device": "STM32F303",
+      "cwd": ".",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "interface": "swd",
+      "executable": "./build/zephyr/zephyr.elf",
+      "runToEntryPoint": "main",
+      "gdbPath": "${config:zephyrSdk}/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+      "configFiles": ["./boards/arm/enya_git_wheel/support/openocd.cfg"],
+      "svdFile": "./boards/arm/enya_git_wheel/support/STM32G0B0.svd",
+      "liveWatch": {
+        "enabled": true,
+        "samplesPerSecond": 1
+      },
+      "preLaunchTask": "Zephyr Build"
+    },
+    {
+      "name": "STLink GDB server",
+      "device": "STM32F303",
+      "cwd": "${workspaceFolder}",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "stlink",
+      "interface": "swd",
+      "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+      "runToEntryPoint": "main",
+      "gdbPath": "${config:zephyrSdk}/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+      "svdFile": "./boards/arm/enya_git_wheel/support/STM32G0B0.svd",
+      "liveWatch": {
+        "enabled": true,
+        "samplesPerSecond": 1
+      },
+      "preLaunchTask": "Zephyr Build"
+    },
+  ]
+}
